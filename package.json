@@ -1,0 +1,33 @@
+{
+  "name": "rent-room-api",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "nodemon $NODE_DEBUG_OPTION src/index.js",
+    "debug": "node $NODE_DEBUG_OPTION src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "connect-multiparty": "^2.2.0",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "express-session": "^1.15.6",
+    "http": "0.0.0",
+    "joi": "^14.3.0",
+    "joi-objectid": "^2.0.0",
+    "keygenerator": "^1.0.4",
+    "lodash": "^4.17.11",
+    "moment": "^2.22.2",
+    "mongodb": "^3.1.10",
+    "mongoose": "^5.3.15",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.7"
+  },
+  "engines": {
+    "node": "10.11.0",
+    "npm": "6.4.1"
+  }
+}
