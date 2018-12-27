@@ -5,7 +5,7 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const moment = require('moment');
-const { UserModel } = require('../../db/User');
+const { UserModel } = require('../../db/models');
 const CheckAuth = require('../auth/Check');
 const ValidationSchema = require('./validation');
 

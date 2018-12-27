@@ -2,10 +2,12 @@ const express = require('express');
 const Router = express.Router();
 const { Router: AuthRouter }= require('./auth');
 const UserRouter = require('./user');
+const RoomRouter = require('./room');
 const error = require('./error');
 
 Router.use('/api/auth', AuthRouter);
 Router.use('/api/user', UserRouter);
+Router.use('/api/room', RoomRouter);
 
 Router.get('/ping', (req, res) => res.status(200).send('pong'));
 
