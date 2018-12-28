@@ -10,7 +10,7 @@ setup(app);
 app.use(router);
 
 (async function () {
-    const db = await init();
+    await init();
 
     app.listen(config.PORT, () => {
         console.log('Server start on port ' + config.PORT);

@@ -2,13 +2,17 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const Schema = mongoose.Schema;
 
-const UserSchema = new Schema({
-    name: String,
-    surname: String,
-    email: String,
-    password: String,
-    session: Object,
-});
+const UserSchema = new Schema(
+    {
+        name: String,
+        surname: String,
+        email: String,
+        password: String,
+        session: Object,
+    }, {
+        collection: 'users'
+    }
+);
 
 const UserProjection = {
     _id: 1,
@@ -18,7 +22,7 @@ const UserProjection = {
 };
 
 const UserModel = {
-    Model: mongoose.model('User', UserSchema, 'users'),
+    Model: mongoose.model('User', UserSchema),
 
     async findOne(match) {
         return this.Model.findOne(match);
