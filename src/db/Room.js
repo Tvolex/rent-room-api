@@ -35,7 +35,7 @@ module.exports = {
         ];
         return {
             total,
-            items: this.Model.aggregate(pipeline).toArray()
+            items: this.Model.aggregate(pipeline).exec()
         };
     },
 
