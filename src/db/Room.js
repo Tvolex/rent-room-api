@@ -22,6 +22,9 @@ module.exports = {
     },
 
     async ListRooms({count, page}) {
+
+        const total = await this.Model.count({});
+
         const pipeline = [
             {
                 $skip: page * count
@@ -30,7 +33,10 @@ module.exports = {
                 $limit: count
             }
         ];
-        return this.Model.aggregate(pipeline).toArray();
+        return {
+            total,
+            items: this.Model.aggregate(pipeline).toArray()
+        };
     },
 
     async findOne(match) {
