@@ -21,6 +21,18 @@ module.exports = {
         return this.Model.find(match);
     },
 
+    async ListRooms({count, page}) {
+        const pipeline = [
+            {
+                $skip: page * count
+            },
+            {
+                $limit: count
+            }
+        ];
+        return this.Model.aggregate(pipeline).toArray();
+    },
+
     async findOne(match) {
         return this.Model.findOne(match);
     },
