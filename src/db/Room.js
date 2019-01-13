@@ -21,13 +21,13 @@ module.exports = {
         return this.Model.find(match);
     },
 
-    async ListRooms({count, page}) {
+    async ListRooms({count = 10, page = 1}) {
 
         const total = await this.Model.count({});
 
         const pipeline = [
             {
-                $skip: page * count
+                $skip: page
             },
             {
                 $limit: count
