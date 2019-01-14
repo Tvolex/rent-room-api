@@ -27,10 +27,10 @@ module.exports = {
 
         const pipeline = [
             {
-                $skip: page
+                $skip: parseInt(page)
             },
             {
-                $limit: count
+                $limit: parseInt(count)
             }
         ];
         return {
