@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Joi = require('joi');
+const { list, create } = require('../router/room/validation');
 const Schema = mongoose.Schema;
 const { OBJECT_ID_REGEX } = require('../const');
 
@@ -21,22 +22,101 @@ module.exports = {
         return this.Model.find(match);
     },
 
-    async ListRooms({count = 10, page = 1}) {
+    async AddRoom (data, uId) {
+        return Joi.validate(
+            Object.assign(
+                {},
+                data
+            ),
+            create,
+            async (err, RoomData) => {
+                if (err) {
+                    err.status = 400;
+                    console.log(err);
+                    throw err;
+                }
 
-        const total = await this.Model.count({});
+                RoomData.createdBy = {
+                    date: new Date().toISOString(),
+                    user: uId,
+                };
 
-        const pipeline = [
-            {
-                $skip: parseInt(page)
-            },
-            {
-                $limit: parseInt(count)
-            }
-        ];
-        return {
-            total,
-            items: await this.Model.aggregate(pipeline).exec()
-        };
+                let CreatedRoom;
+                try {
+                    CreatedRoom = await this.Model.insertOne(RoomData);
+                } catch (err) {
+                    err.status = 400;
+                    console.log(err);
+                    throw err;
+                }
+
+                return this.getById(CreatedRoom._id);
+
+            });
+    },
+
+    async ListRooms(filter = {}, search, count = 10, page = 1, sort) {
+        return Joi.validate(
+            Object.assign(
+                {},
+                ...Object.values(arguments)
+            ),
+            list,
+            async (err, params) => {
+                if (err) {
+                    err.status = 400;
+                    console.log(err);
+                    throw err;
+                }
+
+                const pipeline = [];
+
+                if (!_.isEmpty(params.search)) {
+                    pipeline.push({
+                        $match: {
+                            $or: [
+                                {
+                                    title: {
+                                        $regex: `.*${search}.*`,
+                                        $options: 'i',
+                                    }
+                                },
+                                {
+                                    description: {
+                                        $regex: `.*${search}.*`,
+                                        $options: 'i',
+                                    }
+                                },
+                            ],
+                        }
+                    });
+                }
+
+                if (!_.isEmpty(params.filter)) {
+                    pipeline.push({
+                        $match: {
+                            $and: filterBuilder(params.filter)
+                        }
+                    })
+                }
+
+                pipeline.push(...[
+                    {
+                        $skip: parseInt(params.page)
+                    },
+                    {
+                        $limit: parseInt(params.count)
+                    },
+                    {
+                        $sort: params.sort
+                    }
+                ]);
+
+                return {
+                    total: await this.Model.countDocuments({}),
+                    items: await this.Model.aggregate(pipeline).exec()
+                };
+            });
     },
 
     async findOne(match) {
@@ -54,6 +134,23 @@ module.exports = {
     async getById(_id) {
         return isIdValid(_id) ? this.Model.findOne({ _id }) : null;
     },
+};
+
+const filterBuilder = (filters) => {
+    const $and = [];
+
+    for (let filter in filters) {
+        switch (filter) {
+            case "type":
+                $and.push({type: { $in: filters.type} });
+                break;
+            case "rooms":
+                $and.push({rooms: { $in: filters.rooms} });
+                break;
+        }
+    }
+
+    return $and;
 };
 
 const isIdValid = (id) => {

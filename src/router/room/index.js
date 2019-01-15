@@ -5,13 +5,23 @@ const { RoomModel } = require('../../db/models');
 const CheckAuth = require('../auth/Check');
 
 Router.get('/list', async (req, res, next) => {
-    const { count, page } = req.query;
+    const { filter, search, count, page, sort } = req.query;
 
-    RoomModel.ListRooms({count, page}).then((rooms) => {
-        res.send(rooms);
+    RoomModel.ListRooms(filter, search, count, page, sort).then((rooms) => {
+        res.status(200).send(rooms);
     }).catch((err) => {
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
+});
+
+Router.post('/', CheckAuth, async (req, res, next) => {
+    try {
+        await RoomModel.AddRoom(req.body, req.session.uId);
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({type: 'error', message: err.message})
+    }
+    res.status(200).send(room);
 });
 
 Router.get('/:_id', async (req, res, next) => {
