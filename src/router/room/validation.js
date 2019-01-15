@@ -5,7 +5,7 @@ Joi.ObjectId = require('joi-objectid')(Joi);
 const search = Joi.string().allow(['']).default(null),
     count = Joi.number().default(10),
     page = Joi.number().default(1),
-    sort = Joi.object.keys({
+    sort = Joi.object().keys({
         order: Joi.number().valid([-1, 1]).default(-1),
         by: Joi.string().default('rating'),
     });
