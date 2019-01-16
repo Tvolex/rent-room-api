@@ -59,10 +59,7 @@ module.exports = {
 
     async ListRooms(filter = {}, search, count = 10, page = 1, sort) {
         return Joi.validate(
-            Object.assign(
-                {},
-                ...Object.values(arguments)
-            ),
+            { filter, search, count, page, sort },
             list,
             async (err, params) => {
                 if (err) {
