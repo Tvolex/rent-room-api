@@ -19,7 +19,7 @@ Router.post('/', CheckAuth, async (req, res, next) => {
         await RoomModel.AddRoom(req.body, req.session.uId);
     } catch (err) {
         console.log(err);
-        return res.status(500).send({type: 'error', message: err.message})
+        return res.status(err.status || 500).send({type: 'error', message: err.message})
     }
     res.status(200).send(room);
 });
@@ -27,12 +27,12 @@ Router.post('/', CheckAuth, async (req, res, next) => {
 Router.get('/:_id', async (req, res, next) => {
     let room;
     try {
-        room = await RoomModel.getById(req.params._id);
+        room = await RoomModel.GetFullInfoWithRoomById(req.params._id);
     } catch (err) {
         console.log(err);
-        return res.status(500).send({type: 'error', message: err.message})
+        return res.status(err.status || 500).send({type: 'error', message: err.message})
     }
-    res.status(200).send(room);
+    return res.status(200).send(room);
 });
 
 module.exports = Router;

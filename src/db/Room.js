@@ -3,6 +3,7 @@ const Joi = require('joi');
 const _ = require('lodash');
 const { list, create } = require('../router/room/validation');
 const Schema = mongoose.Schema;
+const { ObjectId } = mongoose.Types;
 const { OBJECT_ID_REGEX } = require('../const');
 
 const RoomSchema = new Schema(
@@ -137,6 +138,51 @@ module.exports = {
     async getById(_id) {
         return isIdValid(_id) ? this.Model.findOne({ _id }) : null;
     },
+
+    async GetFullInfoWithRoomById(_id) {
+        if (!isIdValid(_id)) {
+            throw new Error("_id is not valid");
+        }
+
+        const pipeline = [
+            {
+                $match: {
+                    _id: ObjectId(_id),
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    let: { user: '$createdBy.user' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ['$$user', '$_id']
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                email: 1,
+                                name: 1,
+                            }
+                        }
+                    ],
+                    as: 'createdBy.user'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$createdBy.user',
+                    preserveNullAndEmptyArrays: true,
+                }
+            }
+        ];
+
+        return this.Model.aggregate(pipeline).cursor({}).exec().next();
+
+    }
 };
 
 const filterBuilder = (filters) => {

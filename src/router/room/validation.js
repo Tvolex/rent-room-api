@@ -8,7 +8,7 @@ const search = Joi.string().allow(['']).default(null),
     sort = Joi.object().keys({
         order: Joi.number().valid([-1, 1]).default(-1),
         by: Joi.string().default('price'),
-    });
+    }).default({ by: 'price', order: -1 });
 
 const title = Joi.string(),
     description = Joi.string(),
