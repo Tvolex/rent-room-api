@@ -7,7 +7,7 @@ const search = Joi.string().allow(['']).default(null),
     page = Joi.number().default(1),
     sort = Joi.object().keys({
         order: Joi.number().valid([-1, 1]).default(-1),
-        by: Joi.string().default('rating'),
+        by: Joi.string().default('price'),
     });
 
 const title = Joi.string(),

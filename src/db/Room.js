@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Joi = require('joi');
+const _ = require('lodash');
 const { list, create } = require('../router/room/validation');
 const Schema = mongoose.Schema;
 const { OBJECT_ID_REGEX } = require('../const');
@@ -108,7 +109,9 @@ module.exports = {
                         $limit: parseInt(params.count)
                     },
                     {
-                        $sort: params.sort
+                        $sort: {
+                            [params.sort.by]: params.sort.order
+                        }
                     }
                 ]);
 
