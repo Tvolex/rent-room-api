@@ -129,7 +129,7 @@ module.exports = {
     },
 
     remove(_id) {
-        return this.Model.deleteOne({_id});
+        return this.Model.findOneAndDelete({_id});
     },
 
     async getById(_id) {

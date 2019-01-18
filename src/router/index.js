@@ -5,6 +5,11 @@ const UserRouter = require('./user');
 const RoomRouter = require('./room');
 const error = require('./error');
 
+Router.use((req, res, next) => {
+    console.log(req.originalUrl);
+    next();
+});
+
 Router.use('/api/auth', AuthRouter);
 Router.use('/api/user', UserRouter);
 Router.use('/api/room', RoomRouter);

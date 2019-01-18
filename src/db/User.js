@@ -53,11 +53,11 @@ const UserModel = {
 
     async updateUserSession({_id, session}){
         return this.Model.findOneAndUpdate({
-            _id: ObjectId(_id)
+            _id,
         }, {
             $set: { session }
         }, {
-            projection: UserProjection,
+            fields: UserProjection,
         });
     },
 };

@@ -34,7 +34,7 @@ Router.post('/login', async (req, res, next) => {
             return res.status(400)
                 .send({
                     type: 'error',
-                    message: "Неправильний E-mail"
+                    message: "Wrong E-mail"
                 })
         }
 
@@ -42,7 +42,7 @@ Router.post('/login', async (req, res, next) => {
             return res.status(400)
                 .send({
                     type: 'error',
-                    message: "Неправильний пароль"
+                    message: "Wrong password!"
                 })
         }
 
