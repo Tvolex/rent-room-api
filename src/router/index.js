@@ -3,6 +3,7 @@ const Router = express.Router();
 const { Router: AuthRouter }= require('./auth');
 const UserRouter = require('./user');
 const RoomRouter = require('./room');
+const UploadRouter = require('./upload');
 const error = require('./error');
 
 Router.use((req, res, next) => {
@@ -13,6 +14,7 @@ Router.use((req, res, next) => {
 Router.use('/api/auth', AuthRouter);
 Router.use('/api/user', UserRouter);
 Router.use('/api/room', RoomRouter);
+Router.use('/api/upload', UploadRouter);
 
 Router.get('/ping', (req, res) => res.status(200).send('pong'));
 
