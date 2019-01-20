@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const { SALT_ROUNDS } = require('../const');
-const ObjectId = mongoose.Schema.Types.ObjectId;
+const config = require('../config');
+const _ = require('lodash');
+const ObjectId = mongoose.Types.ObjectId;
+const FileModel = require('./File');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
@@ -20,6 +23,7 @@ const UserProjection = {
     name: 1,
     surname: 1,
     email: 1,
+    avatar: 1,
 };
 
 const UserModel = {
@@ -37,7 +41,7 @@ const UserModel = {
         return this.Model.deleteOne({_id});
     },
 
-    async getById(id) {
+    async getUserById(id) {
         const pipeline = [
             {
                 $match: {
@@ -49,7 +53,21 @@ const UserModel = {
             }
         ];
 
-        return this.Model.aggregate(pipeline).cursor({}).exec().next();
+        const user = await this.Model.aggregate(pipeline).cursor({}).exec().next();
+
+        if (!user) {
+            throw new Error("Such user doesn't exist!").status = 400;
+        }
+
+        const avatar = await FileModel.getById(user.avatar);
+
+        if (_.isEqual(avatar.type, 'error')) {
+            throw new Error(avatar.message).status = avatar.message;
+        }
+
+        user.avatar = avatar;
+
+        return user;
     },
 
     async updateUserSession({_id, session}){

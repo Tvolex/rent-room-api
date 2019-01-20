@@ -10,13 +10,13 @@ const CheckAuth = require('../auth/Check');
 const ValidationSchema = require('./validation');
 
 Router.get('/:_id', async (req, res, next) => {
-    res.status(200).send(await UserModel.getById(req.params._id));
+    res.status(200).send(await UserModel.getUserById(req.params._id));
 });
 
 Router.delete('/:_id', CheckAuth, async (req, res, next) => {
     const { params: { _id }, body } = req;
 
-    const existUser = await UserModel.getById(_id);
+    const existUser = await UserModel.getUserById(_id);
 
     if (!existUser) {
         return res.status(400).send('Такого користувача не існує!');
@@ -36,14 +36,6 @@ Router.delete('/:_id', CheckAuth, async (req, res, next) => {
     }
 
     res.status(500).send({type: 'warning', message: "Не видалено!"});
-});
-
-Router.get('/list', async (req, res, next) => {
-    UserModel.get(req).then((users) => {
-        res.send(users);
-    }).catch((err) => {
-        return res.status(err.status || 500).send({type: 'error', message: err.message});
-    });
 });
 
 Router.post('/', async (req, res, next) => {

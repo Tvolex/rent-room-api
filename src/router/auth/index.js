@@ -88,7 +88,7 @@ Router.get('/check', async (req, res, next) => {
 
     let user;
     try {
-        user = await UserModel.getById(uId);
+        user = await UserModel.getUserById(uId);
     } catch (err) {
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     }
