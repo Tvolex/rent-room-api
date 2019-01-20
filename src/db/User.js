@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { SALT_ROUNDS } = require('../const');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const Schema = mongoose.Schema;
 
@@ -25,7 +26,7 @@ const UserModel = {
     Model: mongoose.model('User', UserSchema),
 
     async findOne(match) {
-        return this.Model.findOne(match);
+        return this.Model.findOne(match).lean().exec();
     },
 
     async create(user) {
@@ -48,7 +49,7 @@ const UserModel = {
             }
         ];
 
-        return this.Model.aggregate(pipeline).next();
+        return this.Model.aggregate(pipeline).cursor({}).exec().next();
     },
 
     async updateUserSession({_id, session}){

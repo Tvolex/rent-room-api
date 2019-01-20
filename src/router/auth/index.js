@@ -1,7 +1,10 @@
 const _ = require('lodash');
 const express = require('express');
+const bcrypt = require('bcrypt');
+
 const Router = express.Router();
 const { UserModel } = require('../../db/User');
+const FileModel  = require('../../db/File');
 
 const CheckAuth = (req, res, next) => {
     const {
@@ -38,13 +41,15 @@ Router.post('/login', async (req, res, next) => {
                 })
         }
 
-        if (!_.isEqual(user.password, password)) {
+        if (!await bcrypt.compare(password, user.password)) {
             return res.status(400)
                 .send({
                     type: 'error',
                     message: "Wrong password!"
                 })
         }
+
+        user.avatar = await FileModel.getById(user.avatar);
 
         req.session.uId = user._id;
         req.session.id = req.sessionID;
