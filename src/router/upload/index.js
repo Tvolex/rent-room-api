@@ -3,8 +3,11 @@ const Router = express.Router();
 const _ = require('lodash');
 const multipart = require('connect-multiparty');
 const multipartMiddleware = multipart();
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 const CheckAuth = require('../auth/Check');
-const Image = require('./image');
+const FileModel = require('../../db/File');
+const Upload = require('./upload');
 
 const uploadValidation = (req) => {
     if (!req.body && !req.files) {
@@ -38,11 +41,15 @@ Router.post('/photo', multipartMiddleware, async (req, res, next) => {
         return res.status(status).send({ type, message });
     }
 
-    Image.photo(image).then(data => {
-        return res.status(200).send(data);
-    }).catch(err => {
-        return res.status(500).send(err.message);
-    });
+    const photoMeta = await Upload.photo(image)
+        .then(data => data)
+        .catch(err => res.status(500).send(err.message));
+
+    const data = await FileModel.save(photoMeta)
+        .then(data => data)
+        .catch(err => res.status(500).send(err.message));
+
+    return res.status(200).send(await FileModel.getById(data._id));
 
 });
 
@@ -54,12 +61,15 @@ Router.post('/avatar', multipartMiddleware, async (req, res, next) => {
         return res.status(status).send({ type, message });
     }
 
-    Image.avatar(image).then(data => {
-        return res.status(200).send(data);
-    }).catch(err => {
-        return res.status(500).send(err.message);
-    });
+    const imageMeta = await Upload.avatar(image)
+        .then(data => data)
+        .catch(err => res.status(500).send(err.message));
 
+    const data = await FileModel.save(imageMeta)
+        .then(data => data)
+        .catch(err => res.status(500).send(err.message));
+
+    return res.status(200).send(await FileModel.getById(data._id));
 });
 
 module.exports = Router;

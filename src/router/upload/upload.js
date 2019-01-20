@@ -76,16 +76,16 @@ const Tinify = async (image) => {
 };
 
 module.exports = {
-    async photo (image) {
-        if (!image && !image.path) {
+    async photo (upload) {
+        if (!upload && !upload.path) {
             throw new Error('No such file').status = 400;
         }
 
-        const { status, message, source, valid } = await Tinify(image);
+        const { status, message, source, valid } = await Tinify(upload);
 
-        const [ , type ] = image.type.split('/');
+        const [ , type ] = upload.type.split('/');
 
-        removeImageFromTemp(image.path);
+        removeImageFromTemp(upload.path);
 
         if (!valid) {
             const err = new Error(message);
@@ -107,7 +107,7 @@ module.exports = {
             height: 100,
         });
 
-        const OriginalMeta = await source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}` }).meta()
+        const OriginalMeta = await source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`}).meta()
             .then(meta => meta)
             .catch(err => console.log(err));
 
@@ -121,11 +121,12 @@ module.exports = {
 
         return {
             name,
+            originalName: upload.originalFilename,
             type,
-            location: {
+            meta: {
                 original: OriginalMeta,
                 thumb: ThumbMeta,
-                fit: FitMeta,
+                fit: null,
             },
             count: tinify.compressionCount
         };
@@ -156,9 +157,7 @@ module.exports = {
             height: 100,
         });
 
-        const originalPath = `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`;
-
-        const OriginalMeta = await source.store({ ...optionsForS3Upload, path: originalPath  }).meta()
+        const OriginalMeta = await source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`}).meta()
             .then(meta => meta)
             .catch(err => console.log(err));
 
@@ -168,10 +167,12 @@ module.exports = {
 
         return {
             name,
+            originalName: image.originalFilename,
             type,
-            location: {
+            meta: {
                 original: OriginalMeta,
                 thumb: ThumbMeta,
+                fit: null,
             },
             count: tinify.compressionCount
         };
