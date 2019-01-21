@@ -68,6 +68,7 @@ module.exports = {
                     throw err;
                 }
 
+                const skip = (parseInt(params.page) - 1) * parseInt(params.count);
                 const pipeline = [];
 
                 if (!_.isEmpty(params.search)) {
@@ -101,7 +102,7 @@ module.exports = {
 
                 pipeline.push(...[
                     {
-                        $skip: parseInt(params.page)
+                        $skip: skip
                     },
                     {
                         $limit: parseInt(params.count)
