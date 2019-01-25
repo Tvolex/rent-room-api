@@ -126,7 +126,7 @@ module.exports = {
             meta: {
                 original: OriginalMeta,
                 thumb: ThumbMeta,
-                fit: null,
+                fit: FitMeta,
             },
             count: tinify.compressionCount
         };
