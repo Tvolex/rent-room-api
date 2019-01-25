@@ -59,6 +59,93 @@ module.exports = {
             }
         }
     },
+
+    getByIds(files) {
+        return Promise.all(files.map(async file => await this.getById(file)));
+    },
+
+    lookupFilesPipeline: [
+        {
+            $lookup: {
+                from: "files",
+                let: {files: "$photos"},
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $in: ["$_id", "$$files"]
+                            }
+                        },
+                    },
+                    {
+                        $project: {
+                            name: 1,
+                            originalName: 1,
+                            type: 1,
+                            meta: 1,
+                            location: {
+                                original: {
+                                    $cond: [
+                                        {
+                                            $or: [
+                                                { $eq: ['$meta', null] },
+                                                { $eq: ['$meta.original', null] },
+                                            ]
+                                        },
+                                        null,
+                                        // `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/${file.name}.${file.type}`
+                                        {
+                                            $concat: [
+                                                `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/`,
+                                                '$name', '.', '$type'
+                                            ]
+                                        }
+                                    ]
+                                },
+                                fit: {
+                                    $cond: [
+                                        {
+                                            $or: [
+                                                { $eq: ['$meta', null] },
+                                                { $eq: ['$meta.fit', null] },
+                                            ]
+                                        },
+                                        null,
+                                        // `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/${file.name}.${file.type}`
+                                        {
+                                            $concat: [
+                                                `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_fit/`,
+                                                '$name', '.', '$type'
+                                            ]
+                                        }
+                                    ]
+                                },
+                                thumb: {
+                                    $cond: [
+                                        {
+                                            $or: [
+                                                { $eq: ['$meta', null] },
+                                                { $eq: ['$meta.thumb', null] },
+                                            ]
+                                        },
+                                        null,
+                                        // `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/${file.name}.${file.type}`
+                                        {
+                                            $concat: [
+                                                `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_thumb/`,
+                                                '$name', '.', '$type'
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ],
+                as: "photos"
+            }
+        }
+    ]
 };
 
 const isIdValid = (id) => {

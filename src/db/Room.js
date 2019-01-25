@@ -3,6 +3,7 @@ const Joi = require('joi');
 const _ = require('lodash');
 const { list, create } = require('../router/room/validation');
 const Schema = mongoose.Schema;
+const FileMode = require('./File');
 const { ObjectId } = mongoose.Types;
 const { OBJECT_ID_REGEX } = require('../const');
 
@@ -102,25 +103,26 @@ module.exports = {
 
                 pipeline.push(...[
                     {
+                        $sort: {
+                            [params.sort.by]: params.sort.order
+                        }
+                    },
+                    {
                         $skip: skip
                     },
                     {
                         $limit: parseInt(params.count)
                     },
-                    {
-                        $sort: {
-                            [params.sort.by]: params.sort.order
-                        }
-                    }
                 ]);
 
+                pipeline.push(...FileMode.lookupFilesPipeline);
+
                 return {
-                    total: await this.Model.countDocuments({}),
-                    items: await this.Model.aggregate(pipeline).exec()
+                    total: await this.Model.countDocuments({}), // TODO: include filter
+                    items: await this.Model.aggregate(pipeline).exec(),
                 };
             });
     },
-
     async findOne(match) {
         return this.Model.findOne(match);
     },
@@ -139,7 +141,10 @@ module.exports = {
 
     async GetFullInfoWithRoomById(_id) {
         if (!isIdValid(_id)) {
-            throw new Error("_id is not valid");
+            const err = new Error("_id is not valid", 400);
+            err.status = 400;
+
+            throw err;
         }
 
         const pipeline = [
@@ -178,7 +183,15 @@ module.exports = {
             }
         ];
 
-        return this.Model.aggregate(pipeline).cursor({}).exec().next();
+        const room = await this.Model.aggregate(pipeline).cursor({}).exec().next();
+
+        if (!room) {
+            return room;
+        }
+
+        room.photos = await FileMode.getByIds(room.photos);
+
+        return room;
 
     }
 };
