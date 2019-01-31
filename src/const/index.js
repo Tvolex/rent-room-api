@@ -7,7 +7,13 @@ module.exports = {
         3,
         4,
     ],
-    TYPE : [
+    TYPE: [
+        "Apartment",
+        "Room",
+        "Hotel",
+        "Hostel",
+    ],
+    TERM : [
         "Short Term",
         "Long Term",
     ]

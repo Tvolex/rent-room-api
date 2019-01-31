@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { ROOMS, TYPE } = require('../../const');
+const { ROOMS, TYPE, TERM } = require('../../const');
 Joi.ObjectId = require('joi-objectid')(Joi);
 
 const search = Joi.string().allow(['']).default(null),
@@ -14,7 +14,8 @@ const title = Joi.string(),
     description = Joi.string(),
     price = Joi.number(),
     type = Joi.string().valid(TYPE),
-    rooms = Joi.number().valid(ROOMS)
+    term = Joi.string().valid(TERM),
+    rooms = Joi.number().valid(ROOMS);
 
 module.exports = {
     create: Joi.object().keys({
@@ -30,6 +31,7 @@ module.exports = {
             fromDate: Joi.date(),
             toDate: Joi.date(),
             type: Joi.array().items(type),
+            term: Joi.array().items(term),
             rooms: Joi.array().items(rooms),
         }),
         search,

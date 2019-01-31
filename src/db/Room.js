@@ -204,6 +204,9 @@ const filterBuilder = (filters) => {
             case "type":
                 $and.push({type: { $in: filters.type} });
                 break;
+            case "term":
+                $and.push({term: { $in: filters.term} });
+                break;
             case "rooms":
                 $and.push({rooms: { $in: filters.rooms} });
                 break;
