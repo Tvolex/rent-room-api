@@ -73,9 +73,6 @@ module.exports = {
 
                 const skip = (parseInt(params.page) - 1) * parseInt(params.count);
                 const pipeline = [];
-                const countRoomsPipeline = [];
-                const countTermPipeline = [];
-                const countTypePipeline = [];
                 const countTotalPipeline = [];
 
                 if (!_.isEmpty(params.search)) {
@@ -99,9 +96,6 @@ module.exports = {
                     };
 
                     pipeline.push(match);
-                    countRoomsPipeline.push(match);
-                    countTermPipeline.push(match);
-                    countTypePipeline.push(match);
                     countTotalPipeline.push(match);
                 }
 
@@ -109,9 +103,6 @@ module.exports = {
                     const match = { $match: { $and: filterBuilder(params.filter) } };
 
                     pipeline.push(match);
-                    countRoomsPipeline.push(match);
-                    countTermPipeline.push(match);
-                    countTypePipeline.push(match);
                     countTotalPipeline.push(match);
                 }
 
@@ -131,65 +122,8 @@ module.exports = {
 
                 pipeline.push(...FileMode.lookupFilesPipeline);
 
-                countRoomsPipeline.push(...[
-                    {
-                        $group: {
-                            _id: '$rooms',
-                            title: { $first: '$rooms' },
-                            count: { $sum: 1 }
-                        }
-                    },
-                    {
-                        $project: {
-                            _id: 0,
-                            title: 1,
-                            count: 1
-                        }
-                    }
-                ]);
-
-                countTermPipeline.push(...[
-                    {
-                        $group: {
-                            _id: '$term',
-                            title: { $first: '$term' },
-                            count: { $sum: 1 }
-                        }
-                    },
-                    {
-                        $project: {
-                            _id: 0,
-                            title: 1,
-                            count: 1
-                        }
-                    }
-                ]);
-
-                countTypePipeline.push(...[
-                    {
-                        $group: {
-                            _id: '$type',
-                            title: { $first: '$type' },
-                            count: { $sum: 1 }
-                        }
-                    },
-                    {
-                        $project: {
-                            _id: 0,
-                            title: 1,
-                            count: 1
-                        }
-                    }
-                ]);
-
-
                 return {
                     items: await this.Model.aggregate(pipeline).exec(),
-                    count: {
-                        rooms: await this.Model.aggregate(countRoomsPipeline).exec(),
-                        term: await this.Model.aggregate(countTermPipeline).exec(),
-                        type: await this.Model.aggregate(countTypePipeline).exec(),
-                    },
                     total: await this.Model.aggregate(countTotalPipeline).exec().then(result => result.length),
                 };
             });
