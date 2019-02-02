@@ -227,6 +227,10 @@ const filterBuilder = (filters) => {
             case "rooms":
                 $and.push({rooms: { $in: filters.rooms} });
                 break;
+            case "price":
+                $and.push({ price: { $gte: filters.price.min }});
+                $and.push({ price: { $lte: filters.price.max }});
+                break;
             default:
                 $and.push({})
         }

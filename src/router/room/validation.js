@@ -13,6 +13,8 @@ const search = Joi.string().allow(['']).default(null),
 const title = Joi.string(),
     description = Joi.string(),
     price = Joi.number(),
+    minPrice = Joi.number().min(0).default(0),
+    maxPrice = Joi.number().min(1).default(99999999),
     type = Joi.string().valid(TYPE),
     term = Joi.string().valid(TERM),
     rooms = Joi.number().valid(ROOMS);
@@ -28,11 +30,15 @@ module.exports = {
 
     list: Joi.object().keys({
         filter: Joi.object().keys({
-            fromDate: Joi.date(),
-            toDate: Joi.date(),
+            rooms: Joi.array().min(1).max(ROOMS.length).items(rooms).default(ROOMS),
             type: Joi.array().min(1).max(TYPE.length).items(type).default(TYPE),
             term: Joi.array().min(1).max(TERM.length).items(term).default(TERM),
-            rooms: Joi.array().min(1).max(ROOMS.length).items(rooms).default(ROOMS),
+            fromDate: Joi.date(),
+            toDate: Joi.date(),
+            price: Joi.object().keys({
+                min: minPrice,
+                max: maxPrice,
+            }),
         }),
         search,
         count,
