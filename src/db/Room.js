@@ -59,6 +59,8 @@ module.exports = {
     },
 
     async ListRooms(filter = {}, search, count = 10, page = 1, sort) {
+        filter = filterValidation(filter);
+
         return Joi.validate(
             { filter, search, count, page, sort },
             list,
@@ -71,9 +73,13 @@ module.exports = {
 
                 const skip = (parseInt(params.page) - 1) * parseInt(params.count);
                 const pipeline = [];
+                const countRoomsPipeline = [];
+                const countTermPipeline = [];
+                const countTypePipeline = [];
+                const countTotalPipeline = [];
 
                 if (!_.isEmpty(params.search)) {
-                    pipeline.push({
+                    const match = {
                         $match: {
                             $or: [
                                 {
@@ -90,15 +96,23 @@ module.exports = {
                                 },
                             ],
                         }
-                    });
+                    };
+
+                    pipeline.push(match);
+                    countRoomsPipeline.push(match);
+                    countTermPipeline.push(match);
+                    countTypePipeline.push(match);
+                    countTotalPipeline.push(match);
                 }
 
                 if (!_.isEmpty(params.filter)) {
-                    pipeline.push({
-                        $match: {
-                            $and: filterBuilder(params.filter)
-                        }
-                    })
+                    const match = { $match: { $and: filterBuilder(params.filter) } };
+
+                    pipeline.push(match);
+                    countRoomsPipeline.push(match);
+                    countTermPipeline.push(match);
+                    countTypePipeline.push(match);
+                    countTotalPipeline.push(match);
                 }
 
                 pipeline.push(...[
@@ -117,9 +131,66 @@ module.exports = {
 
                 pipeline.push(...FileMode.lookupFilesPipeline);
 
+                countRoomsPipeline.push(...[
+                    {
+                        $group: {
+                            _id: '$rooms',
+                            title: { $first: '$rooms' },
+                            count: { $sum: 1 }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            title: 1,
+                            count: 1
+                        }
+                    }
+                ]);
+
+                countTermPipeline.push(...[
+                    {
+                        $group: {
+                            _id: '$term',
+                            title: { $first: '$term' },
+                            count: { $sum: 1 }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            title: 1,
+                            count: 1
+                        }
+                    }
+                ]);
+
+                countTypePipeline.push(...[
+                    {
+                        $group: {
+                            _id: '$type',
+                            title: { $first: '$type' },
+                            count: { $sum: 1 }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            title: 1,
+                            count: 1
+                        }
+                    }
+                ]);
+
+
                 return {
-                    total: await this.Model.countDocuments({}), // TODO: include filter
                     items: await this.Model.aggregate(pipeline).exec(),
+                    count: {
+                        rooms: await this.Model.aggregate(countRoomsPipeline).exec(),
+                        term: await this.Model.aggregate(countTermPipeline).exec(),
+                        type: await this.Model.aggregate(countTypePipeline).exec(),
+                    },
+                    total: await this.Model.aggregate(countTotalPipeline).exec().then(result => result.length),
                 };
             });
     },
@@ -196,6 +267,18 @@ module.exports = {
     }
 };
 
+const filterValidation = (filters) => {
+    filters = JSON.parse(filters);
+
+    Object.keys(filters).forEach(key => {
+        if (_.isEmpty(filters[key]))  {
+            delete filters[key];
+        }
+    });
+
+    return filters;
+};
+
 const filterBuilder = (filters) => {
     const $and = [];
 
@@ -210,6 +293,8 @@ const filterBuilder = (filters) => {
             case "rooms":
                 $and.push({rooms: { $in: filters.rooms} });
                 break;
+            default:
+                $and.push({})
         }
     }
 

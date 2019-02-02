@@ -30,9 +30,9 @@ module.exports = {
         filter: Joi.object().keys({
             fromDate: Joi.date(),
             toDate: Joi.date(),
-            type: Joi.array().items(type),
-            term: Joi.array().items(term),
-            rooms: Joi.array().items(rooms),
+            type: Joi.array().min(1).max(TYPE.length).items(type).default(TYPE),
+            term: Joi.array().min(1).max(TERM.length).items(term).default(TERM),
+            rooms: Joi.array().min(1).max(ROOMS.length).items(rooms).default(ROOMS),
         }),
         search,
         count,
