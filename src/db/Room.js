@@ -10,6 +10,9 @@ const { OBJECT_ID_REGEX } = require('../const');
 const RoomSchema = new Schema(
     {
         title: { type : String },
+        term: { type: String },
+        type: { type: String },
+        rooms: { type: Number },
         price: { type: Number },
         photos: [String]
     },
@@ -58,7 +61,7 @@ module.exports = {
             });
     },
 
-    async ListRooms(filter = {}, search, count = 10, page = 1, sort) {
+    async ListRooms(filter = {}, search, count = 10, page = 1, sort, options) {
         filter = filterValidation(filter);
 
         return Joi.validate(
@@ -101,6 +104,17 @@ module.exports = {
 
                 if (!_.isEmpty(params.filter)) {
                     const match = { $match: { $and: filterBuilder(params.filter) } };
+
+                    pipeline.push(match);
+                    countTotalPipeline.push(match);
+                }
+
+                if (options && options.my) {
+                    const match = {
+                        $match: {
+                            'createdBy.user': ObjectId(options.my)
+                        }
+                    };
 
                     pipeline.push(match);
                     countTotalPipeline.push(match);
@@ -215,6 +229,7 @@ const filterValidation = (filters) => {
 
 const filterBuilder = (filters) => {
     const $and = [];
+
 
     for (let filter in filters) {
         switch (filter) {

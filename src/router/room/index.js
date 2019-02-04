@@ -14,6 +14,16 @@ Router.get('/list', async (req, res, next) => {
     });
 });
 
+Router.get('/list/my', async (req, res, next) => {
+    const { filter, search, count, page, sort } = req.query;
+
+    RoomModel.ListRooms(filter, search, count, page, sort, { my: req.session.uId }).then((rooms) => {
+        res.status(200).send(rooms);
+    }).catch((err) => {
+        return res.status(err.status || 500).send({type: 'error', message: err.message});
+    });
+});
+
 Router.get('/count', async (req, res, next) => {
     const { filter, search, count, page, sort } = req.query;
 
