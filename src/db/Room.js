@@ -70,7 +70,7 @@ module.exports = {
             async (err, params) => {
                 if (err) {
                     err.status = 400;
-                    console.log(err);
+                    console.log(err.message);
                     throw err;
                 }
 
