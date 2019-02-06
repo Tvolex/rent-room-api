@@ -5,7 +5,7 @@ const Joi = require('joi');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const moment = require('moment');
-const { UserModel } = require('../../db/models');
+const { UserModel } = require('../../db/User');
 const CheckAuth = require('../auth/Check');
 const ValidationSchema = require('./validation');
 
@@ -38,25 +38,22 @@ Router.delete('/:_id', CheckAuth, async (req, res, next) => {
     res.status(500).send({type: 'warning', message: "Не видалено!"});
 });
 
-Router.post('/', async (req, res, next) => {
+Router.post('/register', async (req, res, next) => {
     const { body } = req;
 
     let user;
     try {
         user = await Joi.validate(body, ValidationSchema.create);
     } catch (err) {
-        err.status = 400;
         console.log(err);
-        throw err;
+        return res.status(400).send({type: 'error', message: err.message});
     }
 
-    UserModel.create(user).then((user) => {
+    return UserModel.register(user).then((user) => {
         return res.status(200).send(user);
     }).catch((err) => {
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
-
-    return res.status(400).send({type: 'error', message: "Need a valid data"});
 });
 
 module.exports = Router;
