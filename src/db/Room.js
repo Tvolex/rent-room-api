@@ -146,6 +146,65 @@ module.exports = {
         return this.Model.findOne(match);
     },
 
+    async getCountForMyRooms(id) {
+        return this.Model.aggregate([
+            {
+                $match: {
+                    'createdBy.user': ObjectId(id),
+                }
+            },
+            {
+                $facet: {
+                    rooms: [
+                        {
+                            $group: {
+                                _id: "$rooms",
+                                count: {$sum: 1}
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                name: '$_id',
+                                count: 1,
+                            }
+                        }
+                    ],
+                    types: [
+                        {
+                            $group: {
+                                _id: "$type",
+                                count: {$sum: 1}
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                name: '$_id',
+                                count: 1,
+                            }
+                        }
+                    ],
+                    terms: [
+                        {
+                            $group: {
+                                _id: "$term",
+                                count: {$sum: 1}
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                name: '$_id',
+                                count: 1,
+                            }
+                        }
+                    ]
+                }
+            }
+        ]).cursor({}).exec().next();
+    },
+
     async create(user) {
         return this.Model.insertOne(user);
     },

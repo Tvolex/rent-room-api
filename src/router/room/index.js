@@ -14,11 +14,24 @@ Router.get('/list', async (req, res, next) => {
     });
 });
 
-Router.get('/list/my', async (req, res, next) => {
+Router.get('/list/count/:id', async (req, res, next) => {
+    const { id } = req.params;
+
+    if (!id)
+        return res.status(400).send({type: 'error', message: 'user id is not valid'});
+
+    RoomModel.getCountForMyRooms(id).then((rooms) => {
+        return res.status(200).send(rooms);
+    }).catch((err) => {
+        return res.status(err.status || 500).send({type: 'error', message: err.message});
+    });
+});
+
+Router.get('/list/my', CheckAuth, async (req, res, next) => {
     const { filter, search, count, page, sort } = req.query;
 
     RoomModel.ListRooms(filter, search, count, page, sort, { my: req.session.uId }).then((rooms) => {
-        res.status(200).send(rooms);
+        return res.status(200).send(rooms);
     }).catch((err) => {
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
