@@ -1,31 +1,13 @@
-const mongoose = require('mongoose');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
+const { getCollections } = require('../db/index');
 const { SALT_ROUNDS } = require('../const');
 const config = require('../config');
 const _ = require('lodash');
 const UserValidationSchema = require('../router/user/validation');
-const ObjectId = mongoose.Types.ObjectId;
+const ObjectId = require('mongodb').ObjectId;
 const FileModel = require('./File');
-const Schema = mongoose.Schema;
-
-const UserSchema = new Schema(
-    {
-        name: String,
-        surname: String,
-        email: String,
-        contact: String,
-        avatar: {
-            type: ObjectId,
-            default: null,
-        },
-        password: String,
-        session: Object,
-    }, {
-        collection: 'users',
-        versionKey: false
-    }
-);
+const Collections = getCollections();
 
 const UserProjection = {
     _id: 1,
@@ -37,18 +19,17 @@ const UserProjection = {
 };
 
 const UserModel = {
-    Model: mongoose.model('User', UserSchema),
 
     async has (match) {
-        return this.Model.findOne(match).exec({ lean: true });
+        return Collections.files.findOne(match);
     },
 
     async findOne(match) {
-        return this.Model.findOne(match).lean().exec();
+        return Collections.users.find(match).next();
     },
 
     async create(user) {
-        return this.Model.insertOne(user);
+        return Collections.users.insertOne(user);
     },
 
     async register(userData) {
@@ -76,7 +57,7 @@ const UserModel = {
 
                 const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-                const user = await this.Model.create({name, surname, email, password: hashedPassword, contact, avatar});
+                const user = await Collections.users.create({name, surname, email, password: hashedPassword, contact, avatar});
 
                 delete user.password;
 
@@ -85,7 +66,7 @@ const UserModel = {
     },
 
     remove(_id) {
-        return this.Model.deleteOne({_id});
+        return Collections.users.deleteOne({_id});
     },
 
     async getUserById(id) {
@@ -100,7 +81,7 @@ const UserModel = {
             }
         ];
 
-        const user = await this.Model.aggregate(pipeline).cursor({}).exec().next();
+        const user = await Collections.users.aggregate(pipeline).next();
 
         if (!user) {
             throw new Error("Such user doesn't exist!").status = 400;
@@ -118,7 +99,7 @@ const UserModel = {
     },
 
     async updateUserSession({_id, session}){
-        return this.Model.findOneAndUpdate({
+        return Collections.users.findOneAndUpdate({
             _id,
         }, {
             $set: { session }
@@ -135,4 +116,4 @@ const customErr = (description, status) => {
     throw error;
 };
 
-module.exports = { UserSchema, UserModel };
+module.exports = UserModel;

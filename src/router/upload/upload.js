@@ -93,7 +93,7 @@ module.exports = {
             throw err;
         }
 
-        const name = ObjectId();
+        const name = ObjectId().toString();
 
         const fit = await source.resize({
             method: "fit",

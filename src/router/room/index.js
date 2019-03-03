@@ -1,7 +1,7 @@
 const express = require('express');
 const Router = express.Router();
 const _ = require('lodash');
-const { RoomModel } = require('../../db/models');
+const RoomModel = require('../../db/Room');
 const CheckAuth = require('../auth/Check');
 
 Router.get('/list', async (req, res, next) => {
@@ -10,6 +10,7 @@ Router.get('/list', async (req, res, next) => {
     RoomModel.ListRooms(filter, search, count, page, sort).then((rooms) => {
         res.status(200).send(rooms);
     }).catch((err) => {
+        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
 });

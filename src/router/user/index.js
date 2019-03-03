@@ -2,10 +2,9 @@ const express = require('express');
 const Router = express.Router();
 const _ = require('lodash');
 const Joi = require('joi');
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Schema.Types.ObjectId;
+const ObjectId = require('mongodb').ObjectId;
 const moment = require('moment');
-const { UserModel } = require('../../db/User');
+const UserModel = require('../../db/User');
 const CheckAuth = require('../auth/Check');
 const ValidationSchema = require('./validation');
 

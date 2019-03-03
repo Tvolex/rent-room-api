@@ -3,7 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 
 const Router = express.Router();
-const { UserModel } = require('../../db/User');
+const UserModel = require('../../db/User');
 const FileModel  = require('../../db/File');
 
 const CheckAuth = (req, res, next) => {

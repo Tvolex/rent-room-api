@@ -1,20 +1,20 @@
+const ObjectId = require('mongodb').ObjectId;
 const express = require('express');
 const Router = express.Router();
 const _ = require('lodash');
 const multipart = require('connect-multiparty');
 const multipartMiddleware = multipart();
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
 const CheckAuth = require('../auth/Check');
 const FileModel = require('../../db/File');
+const RoomModel = require('../../db/Room');
 const Upload = require('./upload');
 
 const uploadValidation = (req) => {
-    if (!req.body && !req.files) {
+    if (_.isEmpty(req.body) && _.isEmpty(req.files)) {
         return { type: 'error', status: 400, message: 'Bad request!', valid: false };
     }
 
-    const { image = null } = req.files;
+    const  image = req.files.image || req.files.file;
 
     if (!image) {
         return { type: 'error', status: 400, message: "Photo wasn't upload!", valid: false };
@@ -49,7 +49,7 @@ Router.post('/photo', multipartMiddleware, async (req, res, next) => {
         .then(data => data)
         .catch(err => res.status(500).send(err.message));
 
-    return res.status(200).send(await FileModel.getById(data._id));
+    return res.status(200).send(await FileModel.getById(data.insertedId.toString()));
 
 });
 
@@ -69,7 +69,20 @@ Router.post('/avatar', multipartMiddleware, async (req, res, next) => {
         .then(data => data)
         .catch(err => res.status(500).send(err.message));
 
-    return res.status(200).send(await FileModel.getById(data._id));
+    return res.status(200).send(await FileModel.getById(data.insertedId.toString()));
+});
+
+Router.delete('/:fileId', async(req, res, next) => {
+    const fileId = req.params.fileId;
+    try {
+        const data = await RoomModel.removePhoto(fileId);
+        // await FileModel.remove(req.params.fileId);
+
+        return res.status(200).send({ type: 'success', message: 'delete in processing...', data });
+    } catch (err) {
+        console.error(err);
+        return res.status(err.status || 500).send({ type: 'error', message: err.message });
+    }
 });
 
 module.exports = Router;

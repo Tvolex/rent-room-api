@@ -1,36 +1,21 @@
-const mongoose = require('mongoose');
 const Joi = require('joi');
 const _ = require('lodash');
-const Schema = mongoose.Schema;
-const { ObjectId } = mongoose.Types;
+const ObjectId = require('mongodb').ObjectId;
+const { getCollections } = require('../db/index');
 const { OBJECT_ID_REGEX } = require('../const');
 const config = require('../config');
-
-const FileSchema = new Schema(
-    {
-        originalName: String,
-        name: String,
-        type: String,
-        meta: {
-            original: Object,
-            thumb: Object,
-            fit: Object,
-        }
-    },
-    {
-        collection: 'files',
-    }
-);
+const Collections = getCollections();
 
 module.exports = {
-    Model: mongoose.model('File', FileSchema),
 
-    remove(_id) {
-        return this.Model.findOneAndDelete({_id});
+    async remove(_id) {
+        return Collections.files.findOneAndDelete({_id: ObjectId(_id)})
+
+        //TODO: make functionality for remove from AWS S3 Bucket
     },
 
     async save(image, callback) {
-        return this.Model.create({
+        return Collections.files.insertOne({
             _id: ObjectId(image.name),
             ...image,
         }, callback);
@@ -40,9 +25,9 @@ module.exports = {
         let file;
 
         try {
-            file = await this.Model.findById(_id).lean().exec();
+            file = await Collections.files.find({_id: ObjectId(_id.toString())}).next();
         } catch (err) {
-            console.log(err);
+            console.error(err);
             return {
                 type: 'error',
                 message: err.message,

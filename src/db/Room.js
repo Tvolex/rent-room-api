@@ -1,31 +1,15 @@
-const mongoose = require('mongoose');
 const Joi = require('joi');
 const _ = require('lodash');
 const { list, create } = require('../router/room/validation');
-const Schema = mongoose.Schema;
+const { getCollections } = require('../db/index');
 const FileMode = require('./File');
-const { ObjectId } = mongoose.Types;
+const ObjectId = require('mongodb').ObjectId;
 const { OBJECT_ID_REGEX } = require('../const');
-
-const RoomSchema = new Schema(
-    {
-        title: { type : String },
-        term: { type: String },
-        type: { type: String },
-        rooms: { type: Number },
-        price: { type: Number },
-        photos: [String]
-    },
-    {
-        collection: 'rooms',
-    }
-);
+const Collections = getCollections();
 
 module.exports = {
-    Model: mongoose.model('Room', RoomSchema),
-
     async findByMatch(match) {
-        return this.Model.find(match);
+        return Collections.files.find(match);
     },
 
     async AddRoom (data, uId) {
@@ -49,7 +33,7 @@ module.exports = {
 
                 let CreatedRoom;
                 try {
-                    CreatedRoom = await this.Model.insertOne(RoomData);
+                    CreatedRoom = await Collections.files.insertOne(RoomData);
                 } catch (err) {
                     err.status = 400;
                     console.log(err);
@@ -137,17 +121,23 @@ module.exports = {
                 pipeline.push(...FileMode.lookupFilesPipeline);
 
                 return {
-                    items: await this.Model.aggregate(pipeline).exec(),
-                    total: await this.Model.aggregate(countTotalPipeline).exec().then(result => result.length),
+                    items: await Collections.rooms.aggregate(pipeline).toArray(),
+                    total: await Collections.rooms.aggregate(countTotalPipeline).toArray()
+                        .then(result => {
+                            return result.length
+                        }).catch(err => {
+                            console.error(err);
+                            throw err;
+                        }),
                 };
             });
     },
     async findOne(match) {
-        return this.Model.findOne(match);
+        return Collections.rooms.findOne(match);
     },
 
     async getCountForMyRooms(id) {
-        return this.Model.aggregate([
+        return Collections.rooms.aggregate([
             {
                 $match: {
                     'createdBy.user': ObjectId(id),
@@ -202,19 +192,19 @@ module.exports = {
                     ]
                 }
             }
-        ]).cursor({}).exec().next();
+        ]).next();
     },
 
     async create(user) {
-        return this.Model.insertOne(user);
+        return Collections.rooms.insertOne(user);
     },
 
     remove(_id) {
-        return this.Model.findOneAndDelete({_id});
+        return Collections.rooms.findOneAndDelete({_id});
     },
 
     async getById(_id) {
-        return isIdValid(_id) ? this.Model.findOne({ _id }) : null;
+        return isIdValid(_id) ? Collections.rooms.findOne({ _id }) : null;
     },
 
     async GetFullInfoWithRoomById(_id) {
@@ -261,7 +251,7 @@ module.exports = {
             }
         ];
 
-        const room = await this.Model.aggregate(pipeline).cursor({}).exec().next();
+        const room = await Collections.rooms.aggregate(pipeline).next();
 
         if (!room) {
             return room;
@@ -271,6 +261,16 @@ module.exports = {
 
         return room;
 
+    },
+
+    async removePhoto(_id) {
+        return Collections.rooms.updateMany({}, {
+            $pull: {
+                photos: ObjectId(_id)
+            },
+        }, {
+            new: true
+        });
     }
 };
 
