@@ -1,7 +1,6 @@
 const tinify = require("tinify");
 const fs = require('fs');
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
+const ObjectId = require('mongodb').ObjectId;
 const config = require('../../config');
 
 tinify.key = config.TINIFY_API_KEY;
