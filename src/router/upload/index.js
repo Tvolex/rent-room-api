@@ -41,7 +41,7 @@ Router.post('/photo', multipartMiddleware, async (req, res, next) => {
         return res.status(status).send({ type, message });
     }
 
-    const photoMeta = await Upload.photo(image)
+    const photoMeta = await Upload.photo(image, FileModel.updateMetaById)
         .then(data => data)
         .catch(err => res.status(500).send(err.message));
 
@@ -61,7 +61,7 @@ Router.post('/avatar', multipartMiddleware, async (req, res, next) => {
         return res.status(status).send({ type, message });
     }
 
-    const imageMeta = await Upload.avatar(image)
+    const imageMeta = await Upload.avatar(image, FileModel.updateMetaById)
         .then(data => data)
         .catch(err => res.status(500).send(err.message));
 
@@ -72,11 +72,11 @@ Router.post('/avatar', multipartMiddleware, async (req, res, next) => {
     return res.status(200).send(await FileModel.getById(data.insertedId.toString()));
 });
 
-Router.delete('/:fileId', async(req, res, next) => {
+Router.delete('/:fileId', CheckAuth, async(req, res, next) => {
     const fileId = req.params.fileId;
     try {
         const data = await RoomModel.removePhoto(fileId);
-        // await FileModel.remove(req.params.fileId);
+        FileModel.remove(req.params.fileId);
 
         return res.status(200).send({ type: 'success', message: 'delete in processing...', data });
     } catch (err) {

@@ -26,14 +26,18 @@ module.exports = {
                     throw err;
                 }
 
-                RoomData.createdBy = {
-                    date: new Date().toISOString(),
-                    user: uId,
-                };
+                RoomData.createdBy = ObjectId(uId);
+                RoomData.createdAt = new Date().toISOString();
+
+                RoomData.views = 0;
+
+                if (RoomData.photos) {
+                    RoomData.photos = RoomData.photos.map(ObjectId)
+                }
 
                 let CreatedRoom;
                 try {
-                    CreatedRoom = await Collections.files.insertOne(RoomData);
+                    CreatedRoom = await Collections.rooms.insertOne(RoomData);
                 } catch (err) {
                     err.status = 400;
                     console.log(err);
@@ -266,7 +270,7 @@ module.exports = {
     async removePhoto(_id) {
         return Collections.rooms.updateMany({}, {
             $pull: {
-                photos: ObjectId(_id)
+                photos: ObjectId(_id.toString())
             },
         }, {
             new: true

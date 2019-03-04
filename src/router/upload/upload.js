@@ -74,8 +74,12 @@ const Tinify = async (image) => {
     }
 };
 
+const ErrorHandler = (err) => {
+    console.error(err);
+};
+
 module.exports = {
-    async photo (upload) {
+    async photo (upload, cb) {
         if (!upload && !upload.path) {
             throw new Error('No such file').status = 400;
         }
@@ -106,32 +110,35 @@ module.exports = {
             height: 100,
         });
 
-        const OriginalMeta = await source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`}).meta()
-            .then(meta => meta)
-            .catch(err => console.log(err));
+        const OriginalMeta = source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`}).meta()
+            .catch(ErrorHandler);
 
-        const FitMeta = await fit.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_fit/${name}.${type}` }).meta()
-            .then(meta => meta)
-            .catch(err => console.log(err));
+        const FitMeta = fit.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_fit/${name}.${type}` }).meta()
+            .catch(ErrorHandler);
 
-        const ThumbMeta = await thumb.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_thumb/${name}.${type}` }).meta()
-            .then(meta => meta)
-            .catch(err => console.log(err));
+        const ThumbMeta = thumb.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_thumb/${name}.${type}` }).meta()
+            .catch(ErrorHandler);
+
+        Promise.all([OriginalMeta, FitMeta, ThumbMeta]).then((values) => {
+            const [ OriginalMeta, FitMeta, ThumbMeta ] = values;
+            cb(name, { OriginalMeta, FitMeta, ThumbMeta });
+        }).catch(err => {
+            console.error(err);
+            throw err;
+        });
 
         return {
+            _id: ObjectId(name),
             name,
             originalName: upload.originalFilename,
             type,
-            meta: {
-                original: OriginalMeta,
-                thumb: ThumbMeta,
-                fit: FitMeta,
-            },
+            status: "uploading",
+            meta: {},
             count: tinify.compressionCount
         };
     },
 
-    async avatar (image) {
+    async avatar (image, cb) {
         if (!image && !image.path) {
             throw new Error('No such file').status = 400;
         }
@@ -148,31 +155,38 @@ module.exports = {
             throw err;
         }
 
-        const name = ObjectId();
+        const name = ObjectId().toString();
 
-        const thumb = await source.resize({
+        const thumb = source.resize({
             method: "thumb",
             width: 150,
             height: 100,
         });
 
-        const OriginalMeta = await source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`}).meta()
+        const OriginalMeta = source.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_original/${name}.${type}`}).meta()
             .then(meta => meta)
-            .catch(err => console.log(err));
+            .catch(ErrorHandler);
 
-        const ThumbMeta = await thumb.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_thumb/${name}.${type}` }).meta()
+        const ThumbMeta = thumb.store({ ...optionsForS3Upload, path: `${config.AWS_S3_BUCKET_NAME}/images_thumb/${name}.${type}` }).meta()
             .then(meta => meta)
-            .catch(err => console.log(err));
+            .catch(ErrorHandler);
+
+
+        Promise.all([OriginalMeta, ThumbMeta]).then((values) => {
+            const [ OriginalMeta, ThumbMeta ] = values;
+            cb(name, { OriginalMeta, ThumbMeta });
+        }).catch(err => {
+            console.error(err);
+            throw err;
+        });
 
         return {
+            _id: ObjectId(name),
             name,
             originalName: image.originalFilename,
             type,
-            meta: {
-                original: OriginalMeta,
-                thumb: ThumbMeta,
-                fit: null,
-            },
+            status: "uploading",
+            meta: {},
             count: tinify.compressionCount
         };
     },

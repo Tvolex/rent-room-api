@@ -15,10 +15,7 @@ module.exports = {
     },
 
     async save(image, callback) {
-        return Collections.files.insertOne({
-            _id: ObjectId(image.name),
-            ...image,
-        }, callback);
+        return Collections.files.insertOne({ ...image }, callback);
     },
 
     async getById(_id) {
@@ -43,6 +40,49 @@ module.exports = {
                 fit: file.meta.fit ? `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_fit/${file.name}.${file.type}` : null,
             }
         }
+    },
+
+    async updateMetaById(_id, metaType) {
+
+        const { OriginalMeta, FitMeta, ThumbMeta } = metaType;
+
+        const meta = {};
+
+        if (OriginalMeta) {
+            meta.original = OriginalMeta;
+        }
+
+        if (FitMeta) {
+            meta.fit = FitMeta;
+        }
+
+        if (ThumbMeta) {
+            meta.thumb = ThumbMeta;
+        }
+
+
+        let File;
+        try {
+            File = await Collections.files.updateOne({
+                _id: ObjectId(_id.toString()),
+            }, {
+                $set: {
+                    meta,
+                    status: "uploaded",
+                }
+            }, {
+                new: true
+            });
+        } catch (err) {
+            console.error(err);
+            return {
+                type: 'error',
+                message: err.message,
+                status: err.status || 500
+            }
+        }
+
+        return File;
     },
 
     getByIds(files) {

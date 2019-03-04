@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const { ROOMS, TYPE, TERM } = require('../../const');
 Joi.ObjectId = require('joi-objectid')(Joi);
+const { OBJECT_ID_REGEX } = require('../../const');
 
 const search = Joi.string().allow(['']).default(null),
     count = Joi.number().min(1).default(10).error(new Error("Min value for count is 1")),
@@ -17,15 +18,18 @@ const title = Joi.string(),
     maxPrice = Joi.number().min(0).default(99999999).error(new Error("Min price is 0")),
     type = Joi.string().valid(TYPE).error(new Error(`Allow only ${TYPE} for type`)),
     term = Joi.string().valid(TERM).error(new Error(`Allow only ${TERM} for term`)),
-    rooms = Joi.number().valid(ROOMS).error(new Error(`Allow only ${ROOMS} for rooms`));
+    rooms = Joi.number().valid(ROOMS).error(new Error(`Allow only ${ROOMS} for rooms`)),
+    photo = Joi.string().regex(OBJECT_ID_REGEX);
 
 module.exports = {
     create: Joi.object().keys({
-        title,
-        description,
-        price,
-        type,
-        rooms,
+        title: title.required(),
+        description: description.required(),
+        price: price.required(),
+        type: type.required(),
+        term: term.required(),
+        photos: Joi.array().items(photo),
+        rooms: rooms.required(),
     }),
 
     list: Joi.object().keys({

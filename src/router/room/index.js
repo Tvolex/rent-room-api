@@ -40,13 +40,14 @@ Router.get('/list/my', CheckAuth, async (req, res, next) => {
 
 
 Router.post('/', CheckAuth, async (req, res, next) => {
+    let data;
     try {
-        await RoomModel.AddRoom(req.body, req.session.uId);
+        data = await RoomModel.AddRoom(req.body, req.session.uId);
     } catch (err) {
-        console.log(err);
+        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message})
     }
-    res.status(200).send(room);
+    res.status(200).send(data);
 });
 
 Router.get('/:_id', async (req, res, next) => {
@@ -54,7 +55,7 @@ Router.get('/:_id', async (req, res, next) => {
     try {
         room = await RoomModel.GetFullInfoWithRoomById(req.params._id);
     } catch (err) {
-        console.log(err);
+        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message})
     }
     return res.status(200).send(room);
