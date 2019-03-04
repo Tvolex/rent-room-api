@@ -138,7 +138,7 @@ module.exports = {
     },
 
     increaseViews(_id) {
-        Collections.rooms.updateOne({ _id: ObjectId(_id.toString()) }, {
+        Collections.rooms.updateOne({ _id: ObjectId(_id) }, {
             $inc: {
                 views: 1,
             }
@@ -218,7 +218,7 @@ module.exports = {
 
     async getById(_id) {
         return isIdValid(_id) ? Collections.rooms.findOne({
-            _id: ObjectId(_id.toString())
+            _id: ObjectId(_id)
         }) : null;
     },
 
@@ -328,7 +328,7 @@ const filterBuilder = (filters) => {
 };
 
 const isIdValid = (id) => {
-    const result = Joi.validate(id.toString(), Joi.string().regex(OBJECT_ID_REGEX));
+    const result = Joi.validate(id, Joi.string().regex(OBJECT_ID_REGEX));
 
     return !result.error;
 }
