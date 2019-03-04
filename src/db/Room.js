@@ -100,7 +100,7 @@ module.exports = {
                 if (options && options.my) {
                     const match = {
                         $match: {
-                            'createdBy.user': ObjectId(options.my)
+                            createdBy: ObjectId(options.my)
                         }
                     };
 
@@ -144,7 +144,7 @@ module.exports = {
         return Collections.rooms.aggregate([
             {
                 $match: {
-                    'createdBy.user': ObjectId(id),
+                    'createdBy': ObjectId(id),
                 }
             },
             {
@@ -292,7 +292,6 @@ const filterValidation = (filters) => {
 
 const filterBuilder = (filters) => {
     const $and = [];
-
 
     for (let filter in filters) {
         switch (filter) {
