@@ -58,6 +58,9 @@ Router.get('/:_id', async (req, res, next) => {
         console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message})
     }
+
+    RoomModel.increaseViews(req.params._id);
+
     return res.status(200).send(room);
 });
 

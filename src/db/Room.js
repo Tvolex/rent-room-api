@@ -136,6 +136,15 @@ module.exports = {
                 };
             });
     },
+
+    increaseViews(_id) {
+        Collections.rooms.updateOne({ _id: ObjectId(_id.toString()) }, {
+            $inc: {
+                views: 1,
+            }
+        });
+    },
+
     async findOne(match) {
         return Collections.rooms.findOne(match);
     },
@@ -208,7 +217,9 @@ module.exports = {
     },
 
     async getById(_id) {
-        return isIdValid(_id) ? Collections.rooms.findOne({ _id }) : null;
+        return isIdValid(_id) ? Collections.rooms.findOne({
+            _id: ObjectId(_id.toString())
+        }) : null;
     },
 
     async GetFullInfoWithRoomById(_id) {
@@ -317,7 +328,7 @@ const filterBuilder = (filters) => {
 };
 
 const isIdValid = (id) => {
-    const result = Joi.validate(id, Joi.string().regex(OBJECT_ID_REGEX));
+    const result = Joi.validate(id.toString(), Joi.string().regex(OBJECT_ID_REGEX));
 
     return !result.error;
 }
