@@ -8,7 +8,7 @@ const CheckAuth = require('../auth/Check');
 Router.get(['/list', '/list/:id'], async (req, res, next) => {
     const { filter, search, count, page, sort } = req.query;
 
-    const id = req.params.id ? req.params.id : req.session.uId;
+    const id = req.params.id ? req.params.id : null;
 
     RoomModel.ListRooms(filter, search, count, page, sort, { id }).then((rooms) => {
         return res.status(200).send(rooms);
