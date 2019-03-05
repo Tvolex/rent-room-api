@@ -97,10 +97,10 @@ module.exports = {
                     countTotalPipeline.push(match);
                 }
 
-                if (options && options.my) {
+                if (options && options.id) {
                     const match = {
                         $match: {
-                            createdBy: ObjectId(options.my)
+                            createdBy: ObjectId(options.id)
                         }
                     };
 

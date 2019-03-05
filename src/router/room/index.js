@@ -4,13 +4,15 @@ const _ = require('lodash');
 const RoomModel = require('../../db/Room');
 const CheckAuth = require('../auth/Check');
 
-Router.get('/list', async (req, res, next) => {
+
+Router.get(['/list', '/list/:id'], async (req, res, next) => {
     const { filter, search, count, page, sort } = req.query;
 
-    RoomModel.ListRooms(filter, search, count, page, sort).then((rooms) => {
-        res.status(200).send(rooms);
+    const id = req.params.id ? req.params.id : req.session.uId;
+
+    RoomModel.ListRooms(filter, search, count, page, sort, { id }).then((rooms) => {
+        return res.status(200).send(rooms);
     }).catch((err) => {
-        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
 });
@@ -28,16 +30,16 @@ Router.get('/list/count/:id', async (req, res, next) => {
     });
 });
 
-Router.get('/list/my', CheckAuth, async (req, res, next) => {
+Router.get('/statistics/:id', async (req, res, next) => {
     const { filter, search, count, page, sort } = req.query;
 
-    RoomModel.ListRooms(filter, search, count, page, sort, { my: req.session.uId }).then((rooms) => {
+    RoomModel.ListRooms(filter, search, count, page, sort, { id: req.params.id }).then((rooms) => {
         return res.status(200).send(rooms);
     }).catch((err) => {
+        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
 });
-
 
 Router.post('/', CheckAuth, async (req, res, next) => {
     let data;
