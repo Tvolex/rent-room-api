@@ -1,13 +1,5 @@
-const _ = require('lodash');
 const CheckAuth = (req, res, next) => {
-    const {
-        session: {
-            uId,
-            id
-        } = {},
-    } = req;
-
-    if (!_.isEmpty(req.session) && uId && id) {
+    if (req.session.uId) {
         return next();
     } else {
         return res.status(401)
