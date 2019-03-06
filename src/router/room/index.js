@@ -30,17 +30,6 @@ Router.get('/list/count/:id', async (req, res, next) => {
     });
 });
 
-Router.get('/statistics/:id', async (req, res, next) => {
-    const { filter, search, count, page, sort } = req.query;
-
-    RoomModel.ListRooms(filter, search, count, page, sort, { id: req.params.id }).then((rooms) => {
-        return res.status(200).send(rooms);
-    }).catch((err) => {
-        console.error(err);
-        return res.status(err.status || 500).send({type: 'error', message: err.message});
-    });
-});
-
 Router.post('/', CheckAuth, async (req, res, next) => {
     let data;
     try {

@@ -222,6 +222,53 @@ module.exports = {
         }) : null;
     },
 
+    async getMostViewed(userId, { time } = {}) {
+        const pipeline = [];
+
+        if (time && !_.isEmpty(time.from)) {
+            pipeline.push({
+                $match: {
+                    createdAt: {
+                        $gte: new Date(time.from)
+                    }
+                }
+            });
+        }
+
+        if (time && !_.isEmpty(time.to)) {
+            pipeline.push({
+                $match: {
+                    createdAt: {
+                        $lte: new Date(time.to)
+                    }
+                }
+            });
+        }
+
+        if (!_.isEmpty(userId)) {
+            pipeline.push({
+                $match: {
+                    createdBy: ObjectId(userId)
+                }
+            });
+        }
+
+        pipeline.push(...[
+            {
+                $sort: {
+                    "views": -1
+                }
+            },
+            {
+                $limit: 5
+            },
+        ]);
+
+        pipeline.push(...FileMode.lookupFilesPipeline);
+
+        return Collections.rooms.aggregate(pipeline).toArray();
+    },
+
     async GetFullInfoWithRoomById(_id) {
         if (!isIdValid(_id)) {
             const err = new Error("_id is not valid", 400);
