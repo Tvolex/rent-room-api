@@ -338,7 +338,12 @@ module.exports = {
                         $sum: "$dailyViews.views"
                     }
                 }
-            }
+            },
+            {
+                $sort: {
+                    '_id': 1
+                }
+            },
         ]);
 
         return Collections.rooms.aggregate(pipeline).toArray();
