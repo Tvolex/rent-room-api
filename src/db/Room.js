@@ -316,15 +316,26 @@ module.exports = {
         return Collections.rooms.aggregate(pipeline).toArray();
     },
 
-    async getStatByDate(userId) {
+    async getStatByDate(userId, roomId) {
         const pipeline = [];
 
-        pipeline.push(...[
-            {
+        if (userId) {
+            pipeline.push({
                 $match: {
                     createdBy: ObjectId(userId)
                 }
-            },
+            })
+        }
+
+        if (roomId) {
+            pipeline.push({
+                $match: {
+                    _id: ObjectId(roomId)
+                }
+            })
+        }
+
+        pipeline.push(...[
             {
                 $unwind: {
                     path: "$dailyViews",
@@ -366,7 +377,7 @@ module.exports = {
             {
                 $lookup: {
                     from: "users",
-                    let: { user: '$createdBy.user' },
+                    let: { user: '$createdBy' },
                     pipeline: [
                         {
                             $match: {
@@ -382,12 +393,12 @@ module.exports = {
                             }
                         }
                     ],
-                    as: 'createdBy.user'
+                    as: 'createdBy'
                 }
             },
             {
                 $unwind: {
-                    path: '$createdBy.user',
+                    path: '$createdBy',
                     preserveNullAndEmptyArrays: true,
                 }
             }

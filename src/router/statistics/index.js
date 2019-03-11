@@ -23,4 +23,14 @@ Router.get('/by-date/:id', (req, res, next) => {
         return res.status(err.status || 500).send( { type: "error", message: err.message } );
     })
 });
+
+Router.get('/room/:id', CheckAuth, (req, res, next) => {
+    RoomModel.getStatByDate(req.session.uId, req.params.id).then(data => {
+        return res.status(200).send(data);
+    }).catch(err => {
+        console.error(err);
+        return res.status(err.status || 500).send( { type: "error", message: err.message } );
+    })
+});
+
 module.exports = Router;
