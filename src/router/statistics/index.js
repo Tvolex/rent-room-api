@@ -14,4 +14,13 @@ Router.get('/most-viewed/:id', async (req, res, next) => {
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
 });
+
+Router.get('/by-date/:id', (req, res, next) => {
+    RoomModel.getStatByDate(req.params.id).then(data => {
+        return res.status(200).send(data);
+    }).catch(err => {
+        console.error(err);
+        return res.status(err.status || 500).send( { type: "error", message: err.message } );
+    })
+});
 module.exports = Router;

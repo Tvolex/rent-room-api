@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const _ = require('lodash');
+const moment = require('moment');
 const { list, create } = require('../router/room/validation');
 const { getCollections } = require('../db/index');
 const FileMode = require('./File');
@@ -137,7 +138,53 @@ module.exports = {
             });
     },
 
-    increaseViews(_id) {
+    async increaseViews(_id) {
+        const existViewDay = await Collections.rooms.find({
+            _id: ObjectId(_id),
+            dailyViews: {
+                $elemMatch: {
+                    createdAt: {
+                        $eq: moment().startOf('date').toDate(),
+                    }
+                }
+            }
+        }).hasNext();
+
+        if (existViewDay) {
+            Collections.rooms.updateOne({
+                _id: ObjectId(_id),
+                dailyViews: {
+                    $elemMatch: {
+                        createdAt: {
+                            $eq: moment().startOf('date').toDate(),
+                        }
+                    }
+                }
+            }, {
+                $inc: {
+                    'dailyViews.$.views': 1
+                }
+            }, {
+                upsert: true
+            });
+        } else {
+            Collections.rooms.updateOne({
+                _id: ObjectId(_id),
+            }, {
+                $push: {
+                    dailyViews: {
+                        $each: [
+                            {
+                                createdAt: moment().startOf('date').toDate(),
+                                views: 1
+                            }
+                        ]
+                    }
+                }
+            })
+        }
+
+
         Collections.rooms.updateOne({ _id: ObjectId(_id) }, {
             $inc: {
                 views: 1,
@@ -265,6 +312,34 @@ module.exports = {
         ]);
 
         pipeline.push(...FileMode.lookupFilesPipeline);
+
+        return Collections.rooms.aggregate(pipeline).toArray();
+    },
+
+    async getStatByDate(userId) {
+        const pipeline = [];
+
+        pipeline.push(...[
+            {
+                $match: {
+                    createdBy: ObjectId(userId)
+                }
+            },
+            {
+                $unwind: {
+                    path: "$dailyViews",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $group: {
+                    _id: '$dailyViews.createdAt',
+                    total: {
+                        $sum: "$dailyViews.views"
+                    }
+                }
+            }
+        ]);
 
         return Collections.rooms.aggregate(pipeline).toArray();
     },
