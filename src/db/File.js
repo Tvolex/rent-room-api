@@ -22,7 +22,7 @@ module.exports = {
         let file;
 
         try {
-            file = await Collections.files.find({_id: ObjectId(_id.toString())}).next();
+            file = await Collections.files.find({_id: ObjectId(_id)}).next();
         } catch (err) {
             console.error(err);
             return {

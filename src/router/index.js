@@ -1,5 +1,6 @@
 const express = require('express');
 const Router = express.Router();
+const SessionModel = require('../db/Session');
 const { Router: AuthRouter }= require('./auth');
 const UserRouter = require('./user');
 const StatisticsRouter = require('./statistics');
@@ -11,6 +12,8 @@ Router.use((req, res, next) => {
     console.log(req.originalUrl);
     next();
 });
+
+Router.use(SessionModel.justMiddleware);
 
 Router.use('/api/auth', AuthRouter);
 Router.use('/api/user', UserRouter);

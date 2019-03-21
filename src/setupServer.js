@@ -16,7 +16,8 @@ const setup = function (app) {
     app.use(session({
         secret: 'Kvb6swFdB&m66sk4aSB9pSKm',
         resave: true,
-        saveUninitialized: true
+        saveUninitialized: true,
+        expires: new Date(Date.now() + (360000))
     }));
 
     app.use(cors());

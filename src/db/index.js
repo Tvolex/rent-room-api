@@ -28,6 +28,7 @@ const initCollections = async () => {
         Collections.users = Client.db('dev').collection('users');
         Collections.files = Client.db('dev').collection('files');
         Collections.rooms = Client.db('dev').collection('rooms');
+        Collections.sessions = Client.db('dev').collection('sessions');
         return Collections;
     }
     return null;

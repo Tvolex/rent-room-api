@@ -138,7 +138,7 @@ module.exports = {
             });
     },
 
-    async increaseViews(_id) {
+    async increaseUniqViews(_id) {
         const existViewDay = await Collections.rooms.find({
             _id: ObjectId(_id),
             dailyViews: {
@@ -162,7 +162,7 @@ module.exports = {
                 }
             }, {
                 $inc: {
-                    'dailyViews.$.views': 1
+                    'dailyViews.$.uniqueViews': 1
                 }
             }, {
                 upsert: true
@@ -187,7 +187,60 @@ module.exports = {
 
         Collections.rooms.updateOne({ _id: ObjectId(_id) }, {
             $inc: {
-                views: 1,
+                uniqueViews: 1,
+            }
+        });
+    },
+
+    async increaseTotalViews (_id) {
+        const existViewDay = await Collections.rooms.find({
+            _id: ObjectId(_id),
+            dailyViews: {
+                $elemMatch: {
+                    createdAt: {
+                        $eq: moment().startOf('date').toDate(),
+                    }
+                }
+            }
+        }).hasNext();
+
+        if (existViewDay) {
+            Collections.rooms.updateOne({
+                _id: ObjectId(_id),
+                dailyViews: {
+                    $elemMatch: {
+                        createdAt: {
+                            $eq: moment().startOf('date').toDate(),
+                        }
+                    }
+                }
+            }, {
+                $inc: {
+                    'dailyViews.$.totalViews': 1
+                }
+            }, {
+                upsert: true
+            });
+        } else {
+            Collections.rooms.updateOne({
+                _id: ObjectId(_id),
+            }, {
+                $push: {
+                    dailyViews: {
+                        $each: [
+                            {
+                                createdAt: moment().startOf('date').toDate(),
+                                totalViews: 1
+                            }
+                        ]
+                    }
+                }
+            })
+        }
+
+        Collections.rooms.updateOne({ _id: ObjectId(_id) }, {
+            $inc: {
+                totalViews: 1,
             }
         });
     },
@@ -390,6 +443,8 @@ module.exports = {
                             $project: {
                                 email: 1,
                                 name: 1,
+                                contact: 1,
+                                avatar: 1,
                             }
                         }
                     ],
@@ -411,6 +466,8 @@ module.exports = {
         }
 
         room.photos = await FileMode.getByIds(room.photos);
+
+        room.createdBy.avatar = await FileMode.getById(room.createdBy.avatar);
 
         return room;
 

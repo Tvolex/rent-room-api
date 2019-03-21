@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 
 const Router = express.Router();
 const UserModel = require('../../db/User');
+const SessionModel = require('../../db/Session');
 const FileModel  = require('../../db/File');
 
 const CheckAuth = (req, res, next) => {
@@ -54,7 +55,7 @@ Router.post('/login', async (req, res, next) => {
         req.session.uId = user._id;
         req.session.id = req.sessionID;
 
-        await UserModel.updateUserSession({ _id: user._id, session: req.session.id});
+        await SessionModel.updateUserSession(user._id, { sessionId: req.sessionID });
 
         console.log(`User ${user._id} logged in`);
 
