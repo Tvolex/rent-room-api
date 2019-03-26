@@ -16,7 +16,7 @@ Router.get('/most-viewed/:id', async (req, res, next) => {
 });
 
 Router.get('/by-date/:id', (req, res, next) => {
-    RoomModel.getStatByDate(req.params.id).then(data => {
+    RoomModel.getStatByDate(req.params.id, null, { timePeriod: req.query.timePeriod }).then(data => {
         return res.status(200).send(data);
     }).catch(err => {
         console.error(err);

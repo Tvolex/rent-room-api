@@ -369,8 +369,29 @@ module.exports = {
         return Collections.rooms.aggregate(pipeline).toArray();
     },
 
-    async getStatByDate(userId, roomId) {
+    async getStatByDate(userId, roomId, { timePeriod }) {
         const pipeline = [];
+
+        let fromTime, toTime;
+
+        switch (timePeriod) {
+            case 'Day':
+                fromTime = moment().startOf('day').format();
+                toTime = moment().endOf('day').format();
+                break;
+            case 'Week':
+                fromTime = moment().startOf('week').format();
+                toTime = moment().endOf('week').format();
+                break;
+            case 'Month':
+                fromTime = moment().startOf('month').format();
+                toTime = moment().endOf('month').format();
+                break;
+            default:
+                fromTime = moment().startOf('month').format();
+                toTime = moment().endOf('month').format();
+                break;
+        }
 
         if (userId) {
             pipeline.push({
@@ -394,6 +415,11 @@ module.exports = {
                     path: "$dailyViews",
                     preserveNullAndEmptyArrays: true
                 }
+            },
+            {
+                $match: {
+                    'dailyViews.createdAt': { $gte: new Date(fromTime), $lte: new Date(toTime) },
+                },
             },
             {
                 $group: {
