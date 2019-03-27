@@ -9,7 +9,7 @@ const setup = function (app) {
     }));
 
     app.use(bodyParser.urlencoded({
-        extended: false
+        extended: true
     }));
 
     app.use(cookieParser('Kvb6swFdB&m66sk4aSB9pSKm'));

@@ -57,8 +57,8 @@ Router.get('/:_id', async (req, res, next) => {
     const isOwnerRoom = _.isEqual(room.createdBy.toString(), req.session.uId);
 
     if (!isOwnerRoom && !isViewed) {
-        RoomModel.increaseUniqViews(roomId);
-        SessionModel.trackSessionForView(roomId, req.session.id)
+        await SessionModel.trackSessionForView(roomId, req.session.id);
+        await RoomModel.increaseUniqViews(roomId);
     }
 
     RoomModel.increaseTotalViews(roomId);

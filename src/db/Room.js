@@ -28,9 +28,10 @@ module.exports = {
                 }
 
                 RoomData.createdBy = ObjectId(uId);
-                RoomData.createdAt = new Date().toISOString();
+                RoomData.createdAt = new Date();
 
-                RoomData.views = 0;
+                RoomData.totalViews = 0;
+                RoomData.uniqueViews = 0;
 
                 if (RoomData.photos) {
                     RoomData.photos = RoomData.photos.map(ObjectId)
@@ -124,16 +125,13 @@ module.exports = {
                 ]);
 
                 pipeline.push(...FileMode.lookupFilesPipeline);
+                countTotalPipeline.push( { $group: { _id: null, total: { $sum: 1 } } }); // compute count of document by filter
+
+                const Count = await Collections.rooms.aggregate(countTotalPipeline).next();
 
                 return {
                     items: await Collections.rooms.aggregate(pipeline).toArray(),
-                    total: await Collections.rooms.aggregate(countTotalPipeline).toArray()
-                        .then(result => {
-                            return result.length
-                        }).catch(err => {
-                            console.error(err);
-                            throw err;
-                        }),
+                    total: Count ? Count.total : 1,
                 };
             });
     },
@@ -164,8 +162,6 @@ module.exports = {
                 $inc: {
                     'dailyViews.$.uniqueViews': 1
                 }
-            }, {
-                upsert: true
             });
         } else {
             Collections.rooms.updateOne({
@@ -176,7 +172,7 @@ module.exports = {
                         $each: [
                             {
                                 createdAt: moment().startOf('date').toDate(),
-                                views: 1
+                                uniqueViews: 1,
                             }
                         ]
                     }
@@ -218,8 +214,6 @@ module.exports = {
                 $inc: {
                     'dailyViews.$.totalViews': 1
                 }
-            }, {
-                upsert: true
             });
         } else {
             Collections.rooms.updateOne({
@@ -356,7 +350,7 @@ module.exports = {
         pipeline.push(...[
             {
                 $sort: {
-                    "views": -1
+                    "totalViews": -1
                 }
             },
             {
@@ -369,15 +363,15 @@ module.exports = {
         return Collections.rooms.aggregate(pipeline).toArray();
     },
 
-    async getStatByDate(userId, roomId, { timePeriod }) {
+    async getStatByDate(userId, roomId, { timePeriod = null, customTimePeriod = {} } = {}) {
         const pipeline = [];
 
         let fromTime, toTime;
 
         switch (timePeriod) {
-            case 'Day':
-                fromTime = moment().startOf('day').format();
-                toTime = moment().endOf('day').format();
+            case 'Custom':
+                fromTime = moment(customTimePeriod.from, "YYYY-MM-DD").startOf('day').format();
+                toTime = moment(customTimePeriod.to,"YYYY-MM-DD").endOf('day').format();
                 break;
             case 'Week':
                 fromTime = moment().startOf('week').format();
@@ -424,8 +418,11 @@ module.exports = {
             {
                 $group: {
                     _id: '$dailyViews.createdAt',
-                    total: {
-                        $sum: "$dailyViews.views"
+                    totalViews: {
+                        $sum: "$dailyViews.totalViews"
+                    },
+                    uniqueViews: {
+                        $sum: "$dailyViews.uniqueViews"
                     }
                 }
             },
