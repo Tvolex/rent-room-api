@@ -363,10 +363,93 @@ module.exports = {
         return Collections.rooms.aggregate(pipeline).toArray();
     },
 
-    async getStatByDate(userId, roomId, { timePeriod = null, customTimePeriod = {} } = {}) {
+    async getStatByDate(userId, roomId, { groupBy = 'Day', timePeriod = null, customTimePeriod = {} } = {}) {
         const pipeline = [];
 
         let fromTime, toTime;
+
+        switch (groupBy) {
+            case 'Day':
+                groupBy = {
+                    $group: {
+                        _id: { $dayOfMonth: '$dailyViews.createdAt' },
+                        date: {
+                            $first: '$dailyViews.createdAt'
+                        },
+                        totalViews: {
+                            $sum: '$dailyViews.totalViews'
+                        },
+                        uniqueViews: {
+                            $sum: '$dailyViews.uniqueViews'
+                        }
+                    }
+                };
+                break;
+            case 'Week':
+                groupBy = {
+                    $group: {
+                        _id: { $week: '$dailyViews.createdAt' },
+                        date: {
+                            $first: '$dailyViews.createdAt'
+                        },
+                        totalViews: {
+                            $sum: '$dailyViews.totalViews'
+                        },
+                        uniqueViews: {
+                            $sum: '$dailyViews.uniqueViews'
+                        }
+                    }
+                };
+                break;
+            case 'Month':
+                groupBy = {
+                    $group: {
+                        _id: { $month: '$dailyViews.createdAt' },
+                        date: {
+                            $first: '$dailyViews.createdAt'
+                        },
+                        totalViews: {
+                            $sum: '$dailyViews.totalViews'
+                        },
+                        uniqueViews: {
+                            $sum: '$dailyViews.uniqueViews'
+                        }
+                    }
+                };
+                break;
+            case 'Year':
+                groupBy = {
+                    $group: {
+                        _id: { $year: '$dailyViews.createdAt' },
+                        date: {
+                            $first: '$dailyViews.createdAt'
+                        },
+                        totalViews: {
+                            $sum: '$dailyViews.totalViews'
+                        },
+                        uniqueViews: {
+                            $sum: '$dailyViews.uniqueViews'
+                        }
+                    }
+                };
+                break;
+            default:
+                groupBy = {
+                    $group: {
+                        _id: { $week: '$dailyViews.createdAt' },
+                        date: {
+                            $first: '$dailyViews.createdAt'
+                        },
+                        totalViews: {
+                            $sum: '$dailyViews.totalViews'
+                        },
+                        uniqueViews: {
+                            $sum: '$dailyViews.uniqueViews'
+                        }
+                    }
+                };
+                break;
+        }
 
         switch (timePeriod) {
             case 'Custom':
@@ -380,6 +463,10 @@ module.exports = {
             case 'Month':
                 fromTime = moment().startOf('month').format();
                 toTime = moment().endOf('month').format();
+                break;
+            case 'Year':
+                fromTime = moment().startOf('year').format();
+                toTime = moment().endOf('year').format();
                 break;
             default:
                 fromTime = moment().startOf('month').format();
@@ -415,20 +502,10 @@ module.exports = {
                     'dailyViews.createdAt': { $gte: new Date(fromTime), $lte: new Date(toTime) },
                 },
             },
-            {
-                $group: {
-                    _id: '$dailyViews.createdAt',
-                    totalViews: {
-                        $sum: "$dailyViews.totalViews"
-                    },
-                    uniqueViews: {
-                        $sum: "$dailyViews.uniqueViews"
-                    }
-                }
-            },
+            groupBy,
             {
                 $sort: {
-                    '_id': 1
+                    'date': 1
                 }
             },
         ]);

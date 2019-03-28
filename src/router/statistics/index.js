@@ -16,10 +16,11 @@ Router.get('/most-viewed/:id', async (req, res, next) => {
 });
 
 Router.get('/by-date/:id', (req, res, next) => {
+    const groupBy = req.query.groupBy;
     const timePeriod = req.query.timePeriod;
     const customTimePeriod = req.query.customTimePeriod ? JSON.parse(req.query.customTimePeriod) : null;
 
-    RoomModel.getStatByDate(req.params.id, null, { timePeriod, customTimePeriod }).then(data => {
+    RoomModel.getStatByDate(req.params.id, null, { groupBy, timePeriod, customTimePeriod }).then(data => {
         return res.status(200).send(data);
     }).catch(err => {
         console.error(err);
