@@ -1,6 +1,8 @@
 const Joi = require('joi');
 const _ = require('lodash');
-const moment = require('moment');
+const Moment = require('moment');
+const MomentRange = require('moment-range');
+const moment = MomentRange.extendMoment(Moment);
 const { list, create } = require('../router/room/validation');
 const { getCollections } = require('../db/index');
 const FileMode = require('./File');
@@ -366,13 +368,14 @@ module.exports = {
     async getStatByDate(userId, roomId, { groupBy = 'Day', timePeriod = null, customTimePeriod = {} } = {}) {
         const pipeline = [];
 
+        const groupByTime = groupBy;
         let fromTime, toTime;
 
         switch (groupBy) {
             case 'Day':
                 groupBy = {
                     $group: {
-                        _id: { $dayOfMonth: '$dailyViews.createdAt' },
+                        _id: { $dayOfYear: '$dailyViews.createdAt' },
                         date: {
                             $first: '$dailyViews.createdAt'
                         },
@@ -458,19 +461,19 @@ module.exports = {
                 break;
             case 'Week':
                 fromTime = moment().startOf('week').format();
-                toTime = moment().endOf('week').format();
+                toTime = moment().endOf('day').format();
                 break;
             case 'Month':
                 fromTime = moment().startOf('month').format();
-                toTime = moment().endOf('month').format();
+                toTime = moment().endOf('day').format();
                 break;
             case 'Year':
                 fromTime = moment().startOf('year').format();
-                toTime = moment().endOf('year').format();
+                toTime = moment().endOf('day').format();
                 break;
             default:
                 fromTime = moment().startOf('month').format();
-                toTime = moment().endOf('month').format();
+                toTime = moment().endOf('day').format();
                 break;
         }
 
@@ -510,7 +513,86 @@ module.exports = {
             },
         ]);
 
-        return Collections.rooms.aggregate(pipeline).toArray();
+        const range = Array.from(
+            moment.range(moment(fromTime), moment(toTime))
+                .by(groupByTime)
+        );
+
+        const Statistics = await Collections.rooms.aggregate(pipeline).toArray();
+
+        return _
+            .orderBy(
+                range
+                    .map(m => m.format())
+                    .map(date => {
+                        if (groupByTime === 'Day') {
+                            const DataWithSameDay = _.find(Statistics, el => moment(el.date).isSame(date));
+
+                            if (DataWithSameDay)
+                                return {
+                                    ...DataWithSameDay,
+                                    label: moment(DataWithSameDay.date).format('YYYY-MM-DD'),
+                                };
+
+                            return {
+                                date,
+                                label: moment(date).format('YYYY-MM-DD'),
+                                uniqueViews: 0,
+                                totalViews: 0,
+                            };
+                        } else if (groupByTime === 'Week') {
+                            const DataWithSameWeek  = _.find(Statistics, el => moment(el.date).week() === moment(date).week());
+
+                            if (DataWithSameWeek)
+                                return {
+                                    ...DataWithSameWeek,
+                                    label: moment(DataWithSameWeek.date).format('YYYY-MM-DD'),
+                                };
+
+                           return  {
+                               date,
+                               label: moment(date).format('YYYY-MM-DD'),
+                               uniqueViews: 0,
+                               totalViews: 0,
+                           };
+
+                        } else if (groupByTime === 'Month') {
+                            const DataWithSameMonth = _.find(Statistics, el => moment(el.date).month() === moment(date).month());
+
+                            if (DataWithSameMonth)
+                                return {
+                                    ...DataWithSameMonth,
+                                    label: moment(DataWithSameMonth.date).format('MMMM'),
+                                };
+
+                            return  {
+                                date,
+                                label: moment(date).format('MMMM'),
+                                uniqueViews: 0,
+                                totalViews: 0,
+                            };
+
+                        } else if (groupByTime === 'Year') {
+                            const DataWithSameYear = _.find(Statistics, el => moment(el.date).year() === moment(date).year());
+
+                            if (DataWithSameYear) {
+                                return {
+                                    ...DataWithSameYear,
+                                    label: moment(DataWithSameYear.date).year(),
+                                }
+                            }
+
+                            return {
+                                date,
+                                label: moment(date).year(),
+                                uniqueViews: 0,
+                                totalViews: 0,
+                            }
+                        }
+                    }),
+                ['date'],
+                ['asc']
+            )
     },
 
     async GetFullInfoWithRoomById(_id) {

@@ -29,7 +29,10 @@ Router.get('/by-date/:id', (req, res, next) => {
 });
 
 Router.get('/room/:id', CheckAuth, (req, res, next) => {
-    RoomModel.getStatByDate(req.session.uId, req.params.id).then(data => {
+    const groupBy = req.query.groupBy;
+    const timePeriod = req.query.timePeriod;
+
+    RoomModel.getStatByDate(req.session.uId, req.params.id, { groupBy, timePeriod }).then(data => {
         return res.status(200).send(data);
     }).catch(err => {
         console.error(err);
