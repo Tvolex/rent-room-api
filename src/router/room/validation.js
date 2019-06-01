@@ -14,6 +14,13 @@ const search = Joi.string().allow(['']).default(null),
 const title = Joi.string(),
     description = Joi.string(),
     price = Joi.number().error(new Error("Allow only number")),
+    location = Joi.object().keys({
+        address: Joi.string(),
+        point: Joi.object().keys({
+            lng: Joi.number(),
+            lag: Joi.number(),
+        })
+    }),
     minPrice = Joi.number().min(0).default(0).error(new Error("Min price is 0")),
     maxPrice = Joi.number().min(0).default(99999999).error(new Error("Min price is 0")),
     type = Joi.string().valid(TYPE).error(new Error(`Allow only ${TYPE} for type`)),
@@ -26,6 +33,7 @@ module.exports = {
         title: title.required(),
         description: description.required(),
         price: price.required(),
+        location: location,
         type: type.required(),
         term: term.required(),
         photos: Joi.array().items(photo),
