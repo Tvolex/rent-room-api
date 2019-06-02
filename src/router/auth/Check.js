@@ -1,13 +1,29 @@
-const CheckAuth = (req, res, next) => {
-    if (req.session.uId) {
-        return next();
-    } else {
+const UserModel = require('../../db/User');
+
+const CheckAuth = async (req, res, next) => {
+    const {
+        session: {
+            uId,
+            id
+        } = {},
+    } = req;
+
+    let user;
+    try {
+        user = uId && id ? await UserModel.checkUserSession(uId, id) : null;
+    } catch (err) {
+        return res.status(err.status || 500).send({type: 'error', message: err.message});
+    }
+
+    if (!user || _.isEmpty(req.session) || !id || !uId) {
         return res.status(401)
             .send({
                 type: 'error',
                 message: "Not authorized"
             })
     }
+
+    return next();
 };
 
 module.exports = CheckAuth;

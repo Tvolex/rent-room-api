@@ -18,7 +18,7 @@ const title = Joi.string(),
         address: Joi.string(),
         point: Joi.object().keys({
             lng: Joi.number(),
-            lag: Joi.number(),
+            lat: Joi.number(),
         })
     }),
     minPrice = Joi.number().min(0).default(0).error(new Error("Min price is 0")),

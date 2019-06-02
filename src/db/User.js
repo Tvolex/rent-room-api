@@ -98,13 +98,30 @@ const UserModel = {
         return user;
     },
 
-    async updateUserSession({_id, session}){
+    async updateUserSession(_id, session){
         return Collections.users.findOneAndUpdate({
-            _id,
+            _id: ObjectId(_id),
         }, {
-            $set: { session }
+            $push: { sessions: session }
         }, {
             fields: UserProjection,
+        });
+    },
+
+    async destroyUserSession(_id, session){
+        return Collections.users.findOneAndUpdate({
+            _id: ObjectId(_id),
+        }, {
+            $pull: { sessions: session }
+        }, {
+            fields: UserProjection,
+        });
+    },
+
+    async checkUserSession(_id, session){
+        return Collections.users.findOne({
+            _id: ObjectId(_id),
+            sessions: { $in: [session] }
         });
     },
 };

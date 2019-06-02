@@ -7,25 +7,6 @@ const UserModel = require('../../db/User');
 const SessionModel = require('../../db/Session');
 const FileModel  = require('../../db/File');
 
-const CheckAuth = (req, res, next) => {
-    const {
-        session: {
-            uId,
-            id
-        } = {},
-    } = req;
-
-    if (!_.isEmpty(req.session) && uId && id) {
-        return next();
-    } else {
-        return res.status(401)
-            .send({
-                type: 'error',
-                message: "Not authorized"
-            })
-    }
-};
-
 Router.post('/login', async (req, res, next) => {
     const { email, password } = req.body;
 
@@ -56,6 +37,7 @@ Router.post('/login', async (req, res, next) => {
         req.session.id = req.sessionID;
 
         await SessionModel.updateUserSession(user._id, { sessionId: req.sessionID });
+        await UserModel.updateUserSession(user._id,  req.sessionID);
 
         console.log(`User ${user._id} logged in`);
 
@@ -79,19 +61,19 @@ Router.get('/check', async (req, res, next) => {
         } = {},
     } = req;
 
-    if (_.isEmpty(req.session) || !id || !uId) {
+    let user;
+    try {
+        user = uId && id ? await UserModel.checkUserSession(uId, id) : null;
+    } catch (err) {
+        return res.status(err.status || 500).send({type: 'error', message: err.message});
+    }
+
+    if (!user || _.isEmpty(req.session) || !id || !uId) {
         return res.status(401)
             .send({
                 type: 'error',
-                message: "Не авторизовано!"
+                message: "Not authorized"
             })
-    }
-
-    let user;
-    try {
-        user = await UserModel.getUserById(uId);
-    } catch (err) {
-        return res.status(err.status || 500).send({type: 'error', message: err.message});
     }
 
     delete user.password;
@@ -107,6 +89,8 @@ Router.get('/logout', async (req, res, next) => {
 
     if (!_.isEmpty(req.session) && uId) {
         console.log(`User ${req.session.uId} logged out`);
+
+        await UserModel.destroyUserSession(uId, req.sessionID);
     }
 
     req.session.destroy();
@@ -118,4 +102,4 @@ Router.get('/logout', async (req, res, next) => {
         })
 });
 
-module.exports = { Router, CheckAuth };
+module.exports = { Router };
