@@ -1,4 +1,5 @@
 const UserModel = require('../../db/User');
+const _ = require('lodash');
 
 const CheckAuth = async (req, res, next) => {
     const {

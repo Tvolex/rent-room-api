@@ -28,6 +28,19 @@ Router.get('/by-date/:id', (req, res, next) => {
     })
 });
 
+Router.get('/by-status/:id', CheckAuth, (req, res, next) => {
+    return res.status(200).send([
+        {
+            status: 'In Use',
+            value: 15,
+        },
+        {
+            status: 'Is Free',
+            value: 5,
+        },
+    ]);
+});
+
 Router.get('/room/:id', CheckAuth, (req, res, next) => {
     const groupBy = req.query.groupBy;
     const timePeriod = req.query.timePeriod;
