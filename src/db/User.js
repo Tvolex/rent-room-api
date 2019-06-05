@@ -57,7 +57,7 @@ const UserModel = {
 
                 const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-                const user = await Collections.users.create({name, surname, email, password: hashedPassword, contact, avatar});
+                const user = await Collections.users.insertOne({name, surname, email, password: hashedPassword, contact, avatar});
 
                 delete user.password;
 
