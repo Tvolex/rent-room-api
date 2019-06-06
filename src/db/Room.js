@@ -647,7 +647,7 @@ module.exports = {
             return room;
         }
 
-        room.photos = await FileMode.getByIds(room.photos).filter(file => !!file);
+        room.photos = await FileMode.getByIds(room.photos);
 
         room.createdBy.avatar = await FileMode.getById(room.createdBy.avatar);
 
