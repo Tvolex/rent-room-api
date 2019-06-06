@@ -32,6 +32,10 @@ module.exports = {
             }
         }
 
+        if (!file) {
+            return null;
+        }
+
         return {
             ...file,
             location: {
