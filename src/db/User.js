@@ -14,6 +14,7 @@ const UserProjection = {
     name: 1,
     surname: 1,
     email: 1,
+    admin: 1,
     contact: 1,
     avatar: 1,
 };
@@ -36,7 +37,7 @@ const UserModel = {
         return Joi.validate(
             userData,
             UserValidationSchema.create,
-            async (err, { name, surname, email, password, confirmPassword, contact, avatar }) => {
+            async (err, { name, surname, email, password, confirmPassword, admin, contact, avatar }) => {
                 if (err) {
                     err.status = 400;
                     console.log(err.message);
@@ -57,7 +58,7 @@ const UserModel = {
 
                 const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-                const user = await Collections.users.create({name, surname, email, password: hashedPassword, contact, avatar});
+                const user = await Collections.users.create({name, surname, email, password: hashedPassword, admin, contact, avatar});
 
                 delete user.password;
 
