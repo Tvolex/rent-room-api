@@ -14,6 +14,7 @@ Router.get(['/list', '/list/:id'], async (req, res, next) => {
     RoomModel.ListRooms(filter, search, count, page, sort, { id }).then((rooms) => {
         return res.status(200).send(rooms);
     }).catch((err) => {
+        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
 });
@@ -27,6 +28,24 @@ Router.get('/list/count/:id', async (req, res, next) => {
     RoomModel.getCountForMyRooms(id).then((rooms) => {
         return res.status(200).send(rooms);
     }).catch((err) => {
+        return res.status(err.status || 500).send({type: 'error', message: err.message});
+    });
+});
+
+Router.put('/status/:id', async (req, res, next) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!id)
+        return res.status(400).send({type: 'error', message: 'User id is not valid!'});
+
+    if (!status)
+        return res.status(400).send({type: 'error', message: 'Status is required for update!'});
+
+    RoomModel.changeStatus(id, status).then((room) => {
+        return res.status(200).send(room);
+    }).catch((err) => {
+        console.error(err);
         return res.status(err.status || 500).send({type: 'error', message: err.message});
     });
 });

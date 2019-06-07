@@ -126,6 +126,37 @@ module.exports = {
                     },
                 ]);
 
+                pipeline.push(...[
+                    {
+                        $lookup: {
+                            from: "users",
+                            let: {createdBy: "$createdBy"},
+                            pipeline: [
+                                {
+                                    $match: {
+                                        $expr: {
+                                            $eq: ["$_id", "$$createdBy"]
+                                        }
+                                    },
+                                },
+                                {
+                                    $project: {
+                                        name: 1,
+                                        surname: 1,
+                                    }
+                                }
+                            ],
+                            as: "createdBy"
+                        }
+                    },
+                    {
+                        $unwind: {
+                            path: '$createdBy',
+                            preserveNullAndEmptyArrays: true,
+                        }
+                    },
+                ]);
+
                 pipeline.push(...FileMode.lookupFilesPipeline);
                 countTotalPipeline.push( { $group: { _id: null, total: { $sum: 1 } } }); // compute count of document by filter
 
@@ -302,6 +333,16 @@ module.exports = {
                 }
             }
         ]).next();
+    },
+
+    async changeStatus(_id, status) {
+        await Collections.rooms.updateOne({
+            _id: ObjectId(_id),
+        }, {
+            $set: { status },
+        });
+
+        return this.getById(_id);
     },
 
     async create(user) {
@@ -697,6 +738,9 @@ const filterBuilder = (filters) => {
             case "price":
                 $and.push({ price: { $gte: filters.price.min }});
                 $and.push({ price: { $lte: filters.price.max }});
+                break;
+            case "status":
+                $and.push({ status: { $in: filters.status } });
                 break;
             default:
                 $and.push({})

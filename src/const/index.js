@@ -1,6 +1,11 @@
 module.exports = {
     OBJECT_ID_REGEX: /^[0-9a-fA-F]{24}$/,
     SALT_ROUNDS: 10,
+    STATUS: {
+        VERIFYING: "Verifying",
+        REJECTED: "Rejected",
+        VERIFIED: "Verified"
+    },
     ROOMS: [
         1,
         2,

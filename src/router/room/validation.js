@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { ROOMS, TYPE, TERM } = require('../../const');
+const { ROOMS, TYPE, TERM, STATUS } = require('../../const');
 Joi.ObjectId = require('joi-objectid')(Joi);
 const { OBJECT_ID_REGEX } = require('../../const');
 
@@ -21,6 +21,7 @@ const title = Joi.string(),
             lat: Joi.number(),
         })
     }),
+    status = Joi.string().valid(Object.values(STATUS)),
     minPrice = Joi.number().min(0).default(0).error(new Error("Min price is 0")),
     maxPrice = Joi.number().min(0).default(99999999).error(new Error("Min price is 0")),
     type = Joi.string().valid(TYPE).error(new Error(`Allow only ${TYPE} for type`)),
@@ -47,6 +48,7 @@ module.exports = {
             term: Joi.array().min(1).max(TERM.length).items(term).default(TERM),
             fromDate: Joi.date(),
             toDate: Joi.date(),
+            status: Joi.array().items(status).optional(),
             price: Joi.object().keys({
                 min: minPrice,
                 max: maxPrice,
