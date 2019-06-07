@@ -32,6 +32,10 @@ module.exports = {
             }
         }
 
+        if (!file) {
+            return null;
+        }
+
         return {
             ...file,
             location: {
@@ -86,7 +90,10 @@ module.exports = {
     },
 
     getByIds(files) {
-        return Promise.all(files.map(async file => await this.getById(file)));
+        return Promise.all(files
+                .map(async file => await this.getById(file))
+                .filter(file => !!file)
+        );
     },
 
     lookupFilesPipeline: [
