@@ -6,10 +6,27 @@ const ObjectId = require('mongodb').ObjectId;
 const moment = require('moment');
 const UserModel = require('../../db/User');
 const CheckAuth = require('../auth/Check');
+const AdminAccess = require('../auth/AdminAccess');
 const ValidationSchema = require('./validation');
 
+Router.get('/all', CheckAuth, AdminAccess, async (req, res, next) => {
+    const users = await UserModel.getAll()
+        .catch(err => {
+            console.error(err);
+            return res.status(500).send({type: 'error', message: err.message});
+        });
+
+    return res.status(200).send(users);
+});
+
 Router.get('/:_id', async (req, res, next) => {
-    res.status(200).send(await UserModel.getUserById(req.params._id));
+    return res.status(200).send(
+        await UserModel.getUserById(req.params._id)
+            .catch(err => {
+                console.error(err);
+                return res.status(500).send({type: 'error', message: err.message});
+            })
+    );
 });
 
 Router.delete('/:_id', CheckAuth, async (req, res, next) => {

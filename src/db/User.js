@@ -21,6 +21,17 @@ const UserProjection = {
 
 const UserModel = {
 
+    async getAll() {
+        return Collections.users.find({}, {
+            name: 1,
+            surname: 1,
+            email: 1,
+            contact: 1,
+            admin: 1,
+            avatar: 1
+        }).toArray();
+    },
+
     async has (match) {
         return Collections.files.findOne(match);
     },
