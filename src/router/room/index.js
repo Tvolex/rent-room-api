@@ -34,7 +34,7 @@ Router.get('/list/count/:id', async (req, res, next) => {
 
 Router.put('/status/:id', async (req, res, next) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, rejectionReason } = req.body;
 
     if (!id)
         return res.status(400).send({type: 'error', message: 'User id is not valid!'});
@@ -42,7 +42,7 @@ Router.put('/status/:id', async (req, res, next) => {
     if (!status)
         return res.status(400).send({type: 'error', message: 'Status is required for update!'});
 
-    RoomModel.changeStatus(id, status).then((room) => {
+    RoomModel.changeStatus(id, status, rejectionReason).then((room) => {
         return res.status(200).send(room);
     }).catch((err) => {
         console.error(err);

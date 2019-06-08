@@ -81,6 +81,12 @@ module.exports = {
                                     }
                                 },
                                 {
+                                    'location.address': {
+                                        $regex: `.*${search}.*`,
+                                        $options: 'i',
+                                    }
+                                },
+                                {
                                     description: {
                                         $regex: `.*${search}.*`,
                                         $options: 'i',
@@ -335,14 +341,14 @@ module.exports = {
         ]).next();
     },
 
-    async changeStatus(_id, status) {
+    async changeStatus(_id, status, rejectionReason) {
         await Collections.rooms.updateOne({
             _id: ObjectId(_id),
         }, {
-            $set: { status },
+            $set: { status, rejectionReason: rejectionReason || null },
         });
 
-        return this.getById(_id);
+        return this.GetFullInfoWithRoomById(_id);
     },
 
     async create(user) {
@@ -665,6 +671,7 @@ module.exports = {
                         {
                             $project: {
                                 email: 1,
+                                surname: 1,
                                 name: 1,
                                 contact: 1,
                                 avatar: 1,
