@@ -14,6 +14,8 @@ const UserProjection = {
     name: 1,
     surname: 1,
     email: 1,
+    createdAt: 1,
+    status: 1,
     admin: 1,
     contact: 1,
     avatar: 1,
@@ -22,14 +24,99 @@ const UserProjection = {
 const UserModel = {
 
     async getAll() {
-        return Collections.users.find({}, {
-            name: 1,
-            surname: 1,
-            email: 1,
-            contact: 1,
-            admin: 1,
-            avatar: 1
-        }).toArray();
+        return Collections.users.aggregate([
+            {
+                $lookup: {
+                    from: "files",
+                    let: {avatar: "$avatar"},
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$_id", "$$avatar"]
+                                }
+                            },
+                        },
+                        {
+                            $project: {
+                                name: 1,
+                                originalName: 1,
+                                type: 1,
+                                meta: 1,
+                                location: {
+                                    original: {
+                                        $cond: [
+                                            {
+                                                $or: [
+                                                    { $eq: ['$meta', null] },
+                                                    { $eq: ['$meta.original', null] },
+                                                ]
+                                            },
+                                            null,
+                                            // `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/${file.name}.${file.type}`
+                                            {
+                                                $concat: [
+                                                    `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/`,
+                                                    '$name', '.', '$type'
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    fit: {
+                                        $cond: [
+                                            {
+                                                $or: [
+                                                    { $eq: ['$meta', null] },
+                                                    { $eq: ['$meta.fit', null] },
+                                                ]
+                                            },
+                                            null,
+                                            // `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/${file.name}.${file.type}`
+                                            {
+                                                $concat: [
+                                                    `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_fit/`,
+                                                    '$name', '.', '$type'
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    thumb: {
+                                        $cond: [
+                                            {
+                                                $or: [
+                                                    { $eq: ['$meta', null] },
+                                                    { $eq: ['$meta.thumb', null] },
+                                                ]
+                                            },
+                                            null,
+                                            // `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_original/${file.name}.${file.type}`
+                                            {
+                                                $concat: [
+                                                    `https://s3.${config.AWS_S3_BUCKET_REGION}.amazonaws.com/${config.AWS_S3_BUCKET_NAME}/images_thumb/`,
+                                                    '$name', '.', '$type'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    as: "avatar"
+                }
+            },
+            {
+                $unwind: {
+                    path: '$avatar',
+                    preserveNullAndEmptyArrays: true,
+                }
+            },
+            {
+                $project: {
+                    ...UserProjection,
+                }
+            }
+        ]).toArray();
     },
 
     async has (match) {
@@ -69,12 +156,36 @@ const UserModel = {
 
                 const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-                const user = await Collections.users.create({name, surname, email, password: hashedPassword, admin, contact, avatar});
+                const user = await Collections.users.create({
+                    name,
+                    surname,
+                    email,
+                    createdAt: new Date(),
+                    password: hashedPassword,
+                    admin,
+                    contact,
+                    avatar: ObjectId(avatar),
+                });
 
                 delete user.password;
 
                 return user;
             });
+    },
+
+    async changeStatus (_id, status) {
+        return Collections.users.updateOne({
+            _id: ObjectId(_id),
+        }, {
+            $set: {
+                status,
+            }
+        })
+            .then(async data => await this.getUserById(_id))
+            .catch(err => {
+                console.error(err);
+                throw err;
+            })
     },
 
     remove(_id) {
@@ -99,9 +210,9 @@ const UserModel = {
             throw new Error("Such user doesn't exist!").status = 400;
         }
 
-        const avatar = await FileModel.getById(user.avatar);
+        const avatar = await FileModel.getById(user.avatar) ;
 
-        if (_.isEqual(avatar.type, 'error')) {
+        if (avatar && _.isEqual(avatar.type, 'error')) {
             throw new Error(avatar.message).status = avatar.message;
         }
 

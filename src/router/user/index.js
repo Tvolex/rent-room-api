@@ -29,6 +29,16 @@ Router.get('/:_id', async (req, res, next) => {
     );
 });
 
+Router.put('/status/:_id', async (req, res, next) => {
+    return res.status(200).send(
+        await UserModel.changeStatus(req.params._id, req.body.status)
+            .catch(err => {
+                console.error(err);
+                return res.status(500).send({type: 'error', message: err.message});
+            })
+    );
+});
+
 Router.delete('/:_id', CheckAuth, async (req, res, next) => {
     const { params: { _id }, body } = req;
 
