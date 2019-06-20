@@ -85,4 +85,18 @@ Router.get('/:_id', async (req, res, next) => {
     return res.status(200).send(room);
 });
 
+Router.delete('/:_id', async (req, res, next) => {
+    const roomId = req.params._id;
+
+    let room;
+    try {
+        deleted = await RoomModel.deleteById(roomId);
+    } catch (err) {
+        console.error(err);
+        return res.status(err.status || 500).send({type: 'error', message: err.message})
+    }
+
+    return res.status(200).send({ deleted });
+});
+
 module.exports = Router;

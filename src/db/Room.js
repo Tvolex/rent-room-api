@@ -34,6 +34,7 @@ module.exports = {
 
                 RoomData.totalViews = 0;
                 RoomData.uniqueViews = 0;
+                RoomData.status = 'Verifying';
 
                 if (RoomData.photos) {
                     RoomData.photos = RoomData.photos.map(ObjectId)
@@ -357,6 +358,14 @@ module.exports = {
 
     remove(_id) {
         return Collections.rooms.findOneAndDelete({_id});
+    },
+
+    async deleteById(id) {
+        await Collections.rooms.findOneAndDelete({ _id: ObjectId(id) });
+
+        return  {
+            deleted: !await Collections.rooms.findOne({ id: ObjectId(id) })
+        };
     },
 
     async getById(_id) {
