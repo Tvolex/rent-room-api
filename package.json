@@ -19,7 +19,7 @@
     "joi-objectid": "^2.0.0",
     "keygenerator": "^1.0.4",
     "lodash": "^4.17.11",
-    "moment": "^2.22.2",
+    "moment": "^2.29.4",
     "moment-range": "^4.0.2",
     "mongodb": "^3.1.10",
     "path": "^0.12.7",
